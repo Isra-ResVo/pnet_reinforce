@@ -881,7 +881,7 @@ def pr_vals_2_plot(toCompareInPlot, kwargs, point, config, device, idxEle = 0):
         
         subsets = torch.arange(1, siz+1, dtype = torch.int64, device = device)
     
-    else: raise ValueError('imvalid mode fix')
+    else: raise ValueError('invalid mode fix')
 
 
     if mode == 'k' or mode == 'n':

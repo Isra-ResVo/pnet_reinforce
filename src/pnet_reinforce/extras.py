@@ -29,7 +29,7 @@ def extraElements(batchShape, device, norm, oneElement = False)-> torch.Tensor:
 
 
 
-def normalization(batch: "Torch tensor", device:"Device" = "cpu")  -> "Torch tensor with same dimention":
+def normalization(batch: torch.Tensor, device:str = "cpu")  -> torch.Tensor:
     r'''
     Normalize function -> (0,1)
     using the next formula by element and caracteristic
@@ -95,7 +95,7 @@ def labelsFunc(point, mode):
 
 def plotting(args, names, pointsToGraph = None, mode:str = None,
             path = None, logScale = False, labeloptions:tuple = (False,'upper right'),
-            annotatewo = True)-> "image":
+            annotatewo = True)-> None:
 
     # points2graph tuple (value, name2display)
     # data_and_name

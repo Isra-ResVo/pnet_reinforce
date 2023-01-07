@@ -29,12 +29,17 @@ def data_func(
     shape_at_disk=None,
     replace_element_in_memory=None,
 ) -> dict:
-    r"""'
-    Generate a dict with the data for training
+    r"""
+
+    Generate a dict with necessary data to train the model. This data is generated
+    on the fly based in reports presented in another investigations...
+
     """
 
     data = {}
-
+    
+    # indices: what cloud identificator are selected from the static data provided
+    # batch: The data taken from cloud identificators
     if shape_at_disk == "singleelement" and config.item_in_memory:
 
         print("entro en un single element")
@@ -48,9 +53,7 @@ def data_func(
             batch_size=batchSize, variable=variable
         )
 
-    len_elements = []
-    for i in indices:
-        len_elements = [i.shape[0] for i in indices]
+    len_elements = [i.shape[0] for i in indices]
 
     data["len_elements"] = len_elements
 
@@ -59,6 +62,7 @@ def data_func(
             lambda x: torch.tensor(x, device=device, dtype=torch.int64), indices
         )
     else:
+        indices = np.array(indices)
         indices = torch.tensor(indices, device=device, dtype=torch.int64)
 
     batch = torch.tensor(batch, device=device, dtype=torch.float32)
@@ -333,17 +337,14 @@ def system_evaluation(
 
                 tuples_data_and_names.append((redundancy, "Redundancia"))
 
-        print("*" * 50)
-        print(f"pr_normalized {pr_normalized_plot.is_cuda}")
-        print(f"pr_redundancy {redundancy.is_cuda}")
+        if pr_normalized_plot.is_cuda:
+            redundancy = redundancy.cuda()
+
         woValues2Graph = pr_normalized_plot * config.wo[0] + redundancy * config.wo[1]
         # print('valores de woValues2Graph', elementToCompare)
 
         wo = point["prn_ln"] * config.wo[0] + point["normRed"] * config.wo[1]
 
-        print("operacion de los elementos")
-        print("prError", point["value_error"])
-        print("normRed", point["normRed"])
 
         epsilon = 1e-35
         text["wo"] = wo

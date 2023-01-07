@@ -78,7 +78,7 @@ train_arg.add_argument('--monoObjetive', type = str, default = None,
 
 train_arg.add_argument('--temperature', type=float, default=1, help='temperature for confidence in the network for take actions')
 train_arg.add_argument('--graphicComparation', type = bool, default = True, help = 'evaluation graphic option to compare values')
-train_arg.add_argument('--item_in_memory', type = str2bool, default = False, help =  'Use any element in memory for make system evaluations')
+train_arg.add_argument('--item_in_memory', type = str2bool, default = False, help =  'Use an element saved in memory to make system evaluations')
 train_arg.add_argument('--shape_at_disk', type = str, default = 'singleelement', help = 'Two values, the first with one value (singleelement) the other with 20 values(batchelements)')
 train_arg.add_argument('--replace_element_in_memory', type = str2bool, default = False, help = '[optional] parameter default False, to create a new element for evaluation')
 train_arg.add_argument('--wo', type = str2float, default = [0.5,0.5], help = 'array for multiobjective ponderation')

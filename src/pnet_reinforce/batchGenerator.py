@@ -35,7 +35,7 @@ def valuesF(self = None):
 
     return prob_fail, vel_download, vel_upload
 
-def optimisticPessimistic(self = None,  indices = None) -> 'numpy array':
+def optimisticPessimistic(self = None,  indices = None) -> np.ndarray:
 
     r'''
     Returs a batch with two elements:
