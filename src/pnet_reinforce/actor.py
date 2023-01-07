@@ -178,16 +178,21 @@ def error_function(self = None, batch = None, subsets: "list" = None, only_cloud
         return pr_error 
 
 
-def pr_error_bound(self = None, batch = None, subsets:list = None, only_clouds:list = None) -> torch.Tensor:
+def pr_error_bound(
+        self = None, 
+        batch = None, 
+        subsets:list = None,
+        only_clouds:list = None) -> torch.Tensor:
 
     r'''
-    This function avoids to take every combination and makes the element product
-    subsets is a list with len(batch), and each value ius the minimum quantity to fail the system
-    only_clouds are the selected clouds indexes for every instance
+    This function calculate the probability of failure by taking the combinations of
+     elected clouds quantity by the model.
 
-    This bound > than original formula, and is almost O(n) in complexity, converserly the original it almost O(n^k).
-    The original idea is only use binomial coefficient to get all the combination number,  that makes the information get
-    and multiply by the worst combination.
+    This bound greater (>) than original formula, and is almost O(n) in complexity,
+    converserly the original it is almost O(n^k).
+    
+    The main idea is only to use binomial coefficient to get all the possible combinations and
+    multiply it by the worst cloud stats among the all them.
 
     '''
     def factorial2(tensor):
@@ -198,38 +203,19 @@ def pr_error_bound(self = None, batch = None, subsets:list = None, only_clouds:l
         second_exp = factorial2(k)*factorial2(n-k)
         return torch.log(first_exp/second_exp)
           
-    # factorial value for every cloud
-    n_qnt = []
+    # Factorial value for every cloud
+    number_of_clouds = []
     for element in only_clouds:
-        n_qnt.append(len(element))
+        number_of_clouds.append(len(element))
     
-    n_qnt = torch.tensor(n_qnt)
-
-
+    number_of_clouds = torch.tensor(number_of_clouds)
     if subsets.is_cuda:
-        n_qnt = n_qnt.cuda()
+        number_of_clouds = number_of_clouds.cuda()
 
-    cu_n_qnt = n_qnt.clone()
-    cu_subsets = subsets.clone()
-
-    # n_qnt = n_qnt.cpu()
-    # subsets = subsets.cpu()
-    
-    #nCr
-    # primera_operacion = factorial(n_qnt)
-    # segunda_operacion = n_qnt-subsets
-    # tercera_operacion = factorial(subsets)*factorial(segunda_operacion)
-    # logBinomialCoefficient = torch.log( primera_operacion/tercera_operacion )
-
-    logBinomialCoefficient = log_binomial_coefficient(n=cu_n_qnt, k=cu_subsets)
-    
-    
-
-  
-
-    prError = []
+    logBinomialCoefficient = log_binomial_coefficient(n=number_of_clouds, k=subsets)
 
     # calculating the error bound of the clouds based on logBinomialCoefficient
+    prError = []
     for i, (subset, clouds, binomial) in enumerate(zip(subsets, only_clouds, logBinomialCoefficient)):
         clouds = torch.sort(clouds)[0] # when you work with high precition float, to make operation in different order can give similar but diffetent values
         
