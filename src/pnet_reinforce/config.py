@@ -69,7 +69,7 @@ train_arg.add_argument('--key_reward', type = str, default = 'ponderate',
 train_arg.add_argument('--selection', type = str, default = 'categorical', help = 'this control the way how it select elements\n\
                                                                             argmax:  is agressive\n\
                                                                             categorical is for explorations propuses')
-train_arg.add_argument('--log', type = str2bool, default = True, help = 'To apply natural log to pr_error because its almost exponential')
+train_arg.add_argument('--log', type = str2bool, default = False, help = 'To apply natural log to pr_error because has exponential growing')
 train_arg.add_argument('--monoObjetive', type = str, default = None, 
                         help = 'key to print in comparation graph the objetive selected and ignore wo\
                             (prError or redundancy), default values is None and uses wo value')

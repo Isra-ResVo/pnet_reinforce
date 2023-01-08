@@ -291,7 +291,8 @@ def system_evaluation(
                 data_and_name_2graph = [
                     (pr_error_2graph, local_name)
                 ]  # before local names
-                
+                print('*'*100)
+                print(pr_error_2graph)
                 plotting(
                     data_and_name_2graph,
                     points2graph,
