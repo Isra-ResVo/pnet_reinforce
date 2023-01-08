@@ -498,7 +498,7 @@ class Reward (object):
             # In this option is special, only when k = n it's the higher value of pr_error and, the lowers when
             #   n>k we have more conbinations and consecuently a lower pr_error
             if self.config.variable_length:
-                indices = indices_variable_lenght_and_restriction(kwargs['restricted_k'], kwargs['len_elements'], batch, True)
+                indices = indices_variable_length_and_restriction(kwargs['restricted_k'], kwargs['len_elements'], batch, True)
             else:
                 for k, batchEle in zip(kwargs['restricted_k'], batch):
                     indices.append(torch.topk(batchEle[0], k = k, largest = True)[1])
@@ -587,7 +587,7 @@ class Reward (object):
 
         rwd_time = []
 
-        for (k_i, n_i) in zip(self.k_sum, cl):
+        for (k_i, n_i) in zip(self.k_sum, self.cl):
 
             k = str(k_i.cpu().numpy())
             n = str(n_i.cpu().numpy())
