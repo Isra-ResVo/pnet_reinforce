@@ -291,9 +291,11 @@ def system_evaluation(
                 data_and_name_2graph = [
                     (pr_error_2graph, local_name)
                 ]  # before local names
+                
                 plotting(
                     data_and_name_2graph,
                     points2graph,
+                    point=point,
                     mode=config.mode,
                     path=pathLocal,
                     logScale=True,
@@ -326,10 +328,11 @@ def system_evaluation(
 
                 pathLocal = path + " Redundancia.png"
                 points2graph = [(point["redundancy"], "redundancy")]
+                data_and_name = [(redundancy_original, localNames)]
                 plotting(
-                    [redundancy_original],
-                    localNames,
+                    data_and_name,
                     points2graph,
+                    point=point,
                     mode=config.mode,
                     path=pathLocal,
                     labeloptions=labeloptions,
@@ -352,6 +355,8 @@ def system_evaluation(
         text["womax"] = torch.max(woValues2Graph)
         text["won"] = (wo - text["womin"]) / (text["womax"] - text["womin"] + epsilon)
 
+        point["wo"] = wo
+
         if plot:
             tuples_data_and_names.append((woValues2Graph, "WO"))
             pathComparation = path + " Comparacion de objetivos.png"
@@ -369,11 +374,12 @@ def system_evaluation(
                         "the value in monoObjetive is not valid only is implemented prError and redundancy"
                     )
             else:
-                points2graph = [(point["wo"]), "WO"]
+                points2graph = [(point["wo"], "WO")]
 
             plotting(
-                names,
+                tuples_data_and_names,
                 points2graph,
+                point=point,
                 mode=config.mode,
                 path=pathComparation,
                 annotatewo=annotatewo,

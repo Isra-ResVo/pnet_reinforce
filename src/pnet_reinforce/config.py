@@ -45,7 +45,7 @@ net_arg.add_argument('--C', type=float, default=10, help='clipping values')
 
 # Data
 data_arg = add_argument_group('Data')
-data_arg.add_argument('--batch_size', type=int, default=128, help='batch size')
+data_arg.add_argument('--batch_size', type=int, default=2, help='batch size')
 data_arg.add_argument('--input_dim', type = int, default= 1, help = 'Dimencion of data (Cloud properties')
 data_arg.add_argument('--input_embed', type = int, default = 64, help ='embedding dimention Convulution layer')
 data_arg.add_argument('--max_length', type=int, default= 4, help='maximum qnt of clouds secuence') # estaba en 10
@@ -92,13 +92,13 @@ perf_arg = add_argument_group('Training')
 
 # Misc
 misc_arg = add_argument_group('User options')
-misc_arg.add_argument('--save_to', type=str, default='../save/ponderateNormalOne.ph', help='saver sub directory')
-misc_arg.add_argument('--load_from', type=str, default='../save/ponderateNormalOne.ph', help='loader sub directory')
-misc_arg.add_argument('--graphPath', type = str, default = '../graphPyplot/', help = 'path to save the grapt for evaluation')
-misc_arg.add_argument('--log_dir', type=str, default='../log.txt', help='summary writer log directory')
+misc_arg.add_argument('--save_to', type=str, default='./save/ponderateNormalOne.ph', help='saver sub directory')
+misc_arg.add_argument('--load_from', type=str, default='./save/ponderateNormalOne.ph', help='loader sub directory')
+misc_arg.add_argument('--graphPath', type = str, default = './graphPyplot/', help = 'path to save the graph for evaluation')
+misc_arg.add_argument('--log_dir', type=str, default='./log.txt', help='summary writer log directory')
 misc_arg.add_argument('--debugcomments', type = str2bool, default = False, help = 'Display comments in evaluatio mode')
 misc_arg.add_argument('--statistic', type = str2bool, default = False, help = 'statistic for a batch of values')
-misc_arg.add_argument('--plot', type = str2bool, default = False, help = 'bool to display and   save plots')
+misc_arg.add_argument('--plot', type = str2bool, default = True, help = 'bool to display and save plots')
 
 
 def get_config():
