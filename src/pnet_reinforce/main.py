@@ -25,14 +25,18 @@ def data_func(
     config,
     device,
     norm=False,
-    batchSize=None,
-    shape_at_disk=None,
-    replace_element_in_memory=None,
+    batchSize: int =None,
+    shape_at_disk: str = None,
+    replace_element_in_memory: bool = None,
 ) -> dict:
     r"""
 
     Generate a dict with necessary data to train the model. This data is generated
     on the fly based in reports presented in another investigations...
+    
+    args
+    ------
+    shape_at_dist: str  [singleelement| batchelement]
 
     """
 
@@ -74,7 +78,7 @@ def data_func(
         data["batchNormal"] = normalization(batch)
 
     def restriction_data(
-        config, generator, batchSize, device, len_elements, default_restriction=10
+        config, generator, batchSize, len_elements, device, default_restriction=10, 
     ):
         if not config.item_in_memory:
             restriction_data = generator.random_number_in_range_of_len_elements(
@@ -91,16 +95,16 @@ def data_func(
                 )
                 if config.shape_at_disk == "batchelements":
                     restriction_data.repeat(20)
-        return data
+        return restriction_data
 
     if config.mode == "n" and not config.item_in_memory:
         data["restricted_n"] = restriction_data(
-            config, generator, batchSize, len_elements, default_restriction=10
+            config, generator, batchSize, len_elements, config.device,  default_restriction=10
         )
 
     elif config.mode == "k" and not config.item_in_memory:
         data["restricted_k"] = restriction_data(
-            config, generator, batchSize, len_elements, default_restriction=2
+            config, generator, batchSize, len_elements, config.device, default_restriction=2
         )
 
     return data

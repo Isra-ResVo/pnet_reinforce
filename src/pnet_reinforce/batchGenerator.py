@@ -6,7 +6,7 @@ import sys
 import logging
 
 
-def valuesF(self=None):
+def base_data(self=None):
 
     """
     1 -- GoogleDrive
@@ -76,7 +76,7 @@ def optimisticPessimistic(self=None, indices=None) -> np.ndarray:
     """
     # Get the values the probabilities from a dict
 
-    fail_prob = valuesF()[0]
+    fail_prob = base_data()[0]
 
     if indices is not None:
         print(indices)
@@ -97,17 +97,14 @@ def optimisticPessimistic(self=None, indices=None) -> np.ndarray:
 
 class batchGenerator(object):
     r"""
-    Generador de lotes para el entrenamiento
-    las dimenciones serán la siguiente  (batch, channel (dims),  lengt) =
-    (batch, data_dim, clouds)
-    esto principalmente devido a que de esta manera lo pide pytorch
-
-    funcion  sel_n
-    Cuando de quiere fijar el a número especifico de nubes a las cuales seleccionar
-
+    Batch generator to train the model.
+    The dimenction are  (batch_dim, channel (dims), lenght) =
+    (batch_dim, data_dim, id_cloud)
+    
+    These are the required data dimentionality in Pytorch models
     """
-    # Funtions declareted outer of Class
-    get_values = valuesF
+    # function to get the data
+    get_values = base_data
 
     # Funtions declarated inside
     def __init__(self, config):
