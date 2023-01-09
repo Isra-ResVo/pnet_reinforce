@@ -1,5 +1,5 @@
 from abc import ABC
-from pnet_reinforce.generator.generator.initial_data import (
+from generator.generator.initial_data import (
     FAILURE_PROBABILITY,
     UPLOAD_SPEED,
     DOWLOAD_SPEED,
@@ -15,7 +15,8 @@ class BaseBatchGenerator(ABC):
 
     The minimum of information that the generator
     requires  is the information required by this
-    class and this proper functioning.
+    class and this proper functioning among all the
+    subclasses.
 
     The config parameter must be the same be the same
     between calls.
@@ -30,6 +31,9 @@ class BaseBatchGenerator(ABC):
         self.variable_length = config.variable_length
         self.item_in_memory = config.item_in_memory
         self.device = config.device
+        self.shape_at_disk = config.shape_at_disk
+        self.replace_element_in_memory = config.replace_element_in_memory
+        self.train  = config.train_mode
         self.config = config
 
         # data used to generate the distributions

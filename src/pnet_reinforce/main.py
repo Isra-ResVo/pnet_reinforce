@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import logging
 
 # ---- Local modules-------------------------
+from generator.evaluation import Evalution_batches
 from actor import Actor
 from actor import Reward
 from actor import pr_vals_2_plot
@@ -25,7 +26,7 @@ def data_func(
     config,
     device,
     norm=False,
-    batchSize: int =None,
+    batchSize: int = None,
     shape_at_disk: str = None,
     replace_element_in_memory: bool = None,
 ) -> dict:
@@ -33,7 +34,7 @@ def data_func(
 
     Generate a dict with necessary data to train the model. This data is generated
     on the fly based in reports presented in another investigations...
-    
+
     args
     ------
     shape_at_dist: str  [singleelement| batchelement]
@@ -41,21 +42,21 @@ def data_func(
     """
 
     data = {}
-    
+
     # indices: what cloud identificator are selected from the static data provided
     # batch: The data taken from cloud identificators
-    if shape_at_disk == "singleelement" and config.item_in_memory:
+    new_generator = Evalution_batches(config)
+    # if shape_at_disk == "singleelement" and config.item_in_memory:
+    #     batch, indices = generator.itemEvaluation(create=replace_element_in_memory)
+    # elif shape_at_disk == "batchelements" and config.item_in_memory:
+    #     batch, indices = generator.batchEvaluation(create=replace_element_in_memory)
+    # else:
+    #     variable = config.variable_length
+    #     batch, indices = generator.generate_elements_list(
+    #         batch_size=batchSize, variable=variable
+    #     )
 
-        print("entro en un single element")
-        print("valor la variable replace_element_in_memory", replace_element_in_memory)
-        batch, indices = generator.itemEvaluation(create=replace_element_in_memory)
-    elif shape_at_disk == "batchelements" and config.item_in_memory:
-        batch, indices = generator.batchEvaluation(create=replace_element_in_memory)
-    else:
-        variable = config.variable_length
-        batch, indices = generator.generate_elements_list(
-            batch_size=batchSize, variable=variable
-        )
+    batch, indices  = new_generator.item_batch_evalution(batch_size=batchSize)
 
     len_elements = [i.shape[0] for i in indices]
 
@@ -78,7 +79,12 @@ def data_func(
         data["batchNormal"] = normalization(batch)
 
     def restriction_data(
-        config, generator, batchSize, len_elements, device, default_restriction=10, 
+        config,
+        generator,
+        batchSize,
+        len_elements,
+        device,
+        default_restriction=10,
     ):
         if not config.item_in_memory:
             restriction_data = generator.random_number_in_range_of_len_elements(
@@ -99,12 +105,22 @@ def data_func(
 
     if config.mode == "n" and not config.item_in_memory:
         data["restricted_n"] = restriction_data(
-            config, generator, batchSize, len_elements, config.device,  default_restriction=10
+            config,
+            generator,
+            batchSize,
+            len_elements,
+            config.device,
+            default_restriction=10,
         )
 
     elif config.mode == "k" and not config.item_in_memory:
         data["restricted_k"] = restriction_data(
-            config, generator, batchSize, len_elements, config.device, default_restriction=2
+            config,
+            generator,
+            batchSize,
+            len_elements,
+            config.device,
+            default_restriction=2,
         )
 
     return data
@@ -172,14 +188,14 @@ def system_evaluation(
     plot=False,
     path=None,
     printOpt=False,
-    shape_at_disk=None,
+    evaluation: float = False,
 ):
 
     print("valor de plot {}".format(plot))
 
-    if shape_at_disk is not None:
+    if evaluation:
         print(
-            "valor de config.replace_element_in_memory",
+            "Replace element in memory: ",
             config.replace_element_in_memory,
         )
         data = data_func(
@@ -187,9 +203,12 @@ def system_evaluation(
             config,
             device,
             config.normal,
-            shape_at_disk=shape_at_disk,
+            shape_at_disk=config.shape_at_disk,
             replace_element_in_memory=config.replace_element_in_memory,
         )
+
+
+
     else:
         batchSize = 1
         data = data_func(generator, config, device, config.normal, batchSize=batchSize)
@@ -295,7 +314,7 @@ def system_evaluation(
                 data_and_name_2graph = [
                     (pr_error_2graph, local_name)
                 ]  # before local names
-                print('*'*100)
+                print("*" * 100)
                 print(pr_error_2graph)
                 plotting(
                     data_and_name_2graph,
@@ -352,7 +371,6 @@ def system_evaluation(
         # print('valores de woValues2Graph', elementToCompare)
 
         wo = point["prn_ln"] * config.wo[0] + point["normRed"] * config.wo[1]
-
 
         epsilon = 1e-35
         text["wo"] = wo
@@ -518,6 +536,7 @@ def main():
         logging.basicConfig(level=logging.INFO)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    config.device = device
 
     # Nerwork initialization
     pointer_net = Actor(config, device)
@@ -615,11 +634,11 @@ def main():
             if evaluation and i_epoch % 1 == 0:
                 path = "{} Epoch {}".format(config.graphPath, i_epoch)
                 system_evaluation(
-                    pointer_net,
-                    critic_net,
-                    generator,
-                    config,
-                    device,
+                    pointer_net=pointer_net,
+                    crictic_net=critic_net,
+                    generator=generator,
+                    config=config,
+                    device=device,
                     plot=plot,
                     path=path,
                 )
@@ -643,15 +662,15 @@ def main():
         shape_at_disk = config.shape_at_disk  # str
 
         system_evaluation(
-            pointer_net,
-            critic_net,
-            generator,
-            config,
-            device,
+            pointer_net=pointer_net,
+            critic_net=critic_net,
+            generator=generator,
+            config=config,
+            device=device,
             plot=plot,
             path=path,
             printOpt=False,
-            shape_at_disk=shape_at_disk,
+            evaluation=True,
         )
 
 

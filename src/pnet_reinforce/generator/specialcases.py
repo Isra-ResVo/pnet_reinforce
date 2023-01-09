@@ -4,7 +4,7 @@ from pnet_reinforce.generator.generator.base import BaseBatchGenerator
 
 class RandomGenerator(BaseBatchGenerator):
     def __init__(self, config):
-        super(RandomGenerator).__init__(config)
+        super(RandomGenerator, self).__init__(config)
 
     def __random_number_in_range_of_len_elements(
         self, batch_size: int = None, len_elements: iter = None

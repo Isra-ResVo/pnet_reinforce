@@ -1,10 +1,11 @@
 import sys
 import pickle
-from pnet_reinforce.generator.generator.list_elements import ListElements
+import numpy as np
+from generator.generator.base import BaseBatchGenerator
+from generator.generator.list_elements import ListElements
 
 
-
-class Evalution_batches(object):
+class Evalution_batches(BaseBatchGenerator):
     r"""
     This function constains method to retrieve data from memory to
     make evalutions and compare results. If the values doesn't exit
@@ -17,45 +18,85 @@ class Evalution_batches(object):
     """
 
     def __init__(self, config):
+        super(Evalution_batches, self).__init__(config=config)
         self.list_elements = ListElements(config=config)
 
+    def item_batch_evalution(
+        self, batch_size: int = None
+    ) -> tuple[np.ndarray, np.ndarray]:
+        r"""
+        This fucntion only manages the logic in how to provide the data
+        based in the configuration. This configuration is based on the
+        shape of elements (multi elements or single element), if use
+        the item in memory or ignore it and use the predifined batch shape.
 
-    def item_evaluation(self, variable_length: bool, create: bool = False):
+        """
+        if (
+            self.shape_at_disk == "singleelement"
+            and self.item_in_memory
+            and not self.train_mode
+        ):
+            batch, indices = self.__item_evaluation()
+        elif (
+            self.shape_at_disk == "batchelements"
+            and self.item_in_memory
+            and not self.train_mode
+        ):
+            batch, indices = self.__batch_evaluation()
+        else:
+            # this is used in traning and when evalution doesn't require to use
+            # elements in memory.
+            batch, indices = self.list_elements.generate_elements_list(
+                batch_size=batch_size
+            )
+
+        return batch, indices
+
+    def __item_evaluation(self):
+        variable_length = self.variable_length
+        create = self.replace_element_in_memory
         if variable_length:
             path = "./saved_batchs/single_element_variable"
         else:
             path = "./saved_batchs/single_element"
         batch_size = 1
-        tuplebatchindices = self.batchstored(create, path, batch_size, variable_length)
+        tuplebatchindices = self.__batchstored(
+            create, path, batch_size, variable_length
+        )
         return tuplebatchindices
 
-    def batch_evaluation(self, variable_length: bool, create: bool = False):
+    def __batch_evaluation(self):
+        variable_length = self.variable_length
+        create = self.replace_element_in_memory
         if variable_length:
             path = "./saved_batchs/20_elements_variable"
         else:
             path = "./saved_batchs/20_elements"
         BATCH_SIZE = 20
-        tuplebatchindices = self.batchstored(create, path, BATCH_SIZE, variable_length)
+        tuplebatchindices = self.__batchstored(
+            create, path, BATCH_SIZE, variable_length
+        )
         return tuplebatchindices
 
-    def create_new(self, path, batch_size=1, variable=False):
+    def __create_new(self, path, batch_size=1):
         r"""
 
         Take the first element from the batch and indexs
-        
+
         """
-        toSave = self.list_elements.generate_elements_list(batch_size=batch_size, variable=variable)
+        toSave = self.list_elements.generate_elements_list(batch_size=batch_size)
         with open(file=path, mode="wb") as f:
             pickle.dump(toSave, f)
         print("New item created and saved in disk, path: {}".format(path))
         return toSave
 
-    # intern
-    def batchstored(self, create: bool, path: str, batch_size=1, variable=False):
+    def __batchstored(
+        self, create: bool, path: str, batch_size=1
+    ) -> tuple[np.ndarray, np.ndarray]:
 
         r"""
-        This method is a helper to manege the load or creation of 
-        new batches to evalution. If the `creation` is `False` then 
+        This method is a helper to manege the load or creation of
+        new batches to evalution. If the `creation` is `False` then
         the helper will try to load the batch saved in memory and if this
         fails will create a new batch and saved in the correct path.
 
@@ -63,7 +104,7 @@ class Evalution_batches(object):
 
         if create:
             print("New instance for evaluate created")
-            tuplebatchindices = self.create_new(path, batch_size, variable)
+            tuplebatchindices = self.__create_new(path, batch_size)
 
         else:
             try:
@@ -73,7 +114,7 @@ class Evalution_batches(object):
 
             except (IOError, EOFError):
                 print("File not found or empty file")
-                tuplebatchindices = self.create_new(path, batch_size, variable)
+                tuplebatchindices = self.__create_new(path, batch_size)
 
             except:
                 print("Unexpected error", sys.exc_info()[0])

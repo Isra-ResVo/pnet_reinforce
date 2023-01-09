@@ -3,15 +3,15 @@
 import argparse
 
 
-parser = argparse.ArgumentParser(description='Archivo para la configuración del entorno')
+parser = argparse.ArgumentParser(description='This file is the main configuration of the file')
 arg_lists = []
 
 
+#helper function to manipulate string data
 def add_argument_group(name):
     arg = parser.add_argument_group(name)
     arg_lists.append(arg)   
     return arg
-
 
 def str2bool(v):
     return v.lower() in ('true', '1')
@@ -102,6 +102,12 @@ misc_arg.add_argument('--plot', type = str2bool, default = True, help = 'bool to
 
 
 def get_config():
+    r'''
+    This object contain all the configurations. The configuration
+    can be passed thorugh the terminal as any program to overwrite
+    the original configuration this is very useful to make scripts
+    to make different confurations.All for replication propouses.
+    '''
     config, unparsed = parser.parse_known_args()
     return config, unparsed
 
@@ -116,5 +122,4 @@ def print_config():
         print ('      ',arg+('-'*blank_space), getattr(config,arg))
 
 if __name__ == "__main__":
-
     print_config()

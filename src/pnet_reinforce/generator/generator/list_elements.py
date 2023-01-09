@@ -1,11 +1,12 @@
 import numpy as np
-from pnet_reinforce.generator.generator.base import BaseBatchGenerator
+from generator.generator.base import BaseBatchGenerator
+
 
 class ListElements(BaseBatchGenerator):
     def __init__(self, config):
-        super(ListElements).__init__(config)
+        super(ListElements, self).__init__(config)
 
-    def for_secuence(self, elements_length, parameters_min_max):
+    def __for_secuence(self, elements_length, parameters_min_max):
         elements_secuences = []
         index_elements = []
 
@@ -27,7 +28,7 @@ class ListElements(BaseBatchGenerator):
 
         return elements_secuences, index_elements
 
-    def padding_secuences(self, secuence_list, max_length):
+    def __padding_secuences(self, secuence_list, max_length):
         len_list = len(secuence_list)
         num_parameters = secuence_list[0].shape[0]
         matrix_output = np.zeros(shape=(len_list, num_parameters, max_length))
@@ -37,9 +38,11 @@ class ListElements(BaseBatchGenerator):
         return matrix_output
 
     def generate_elements_list(
-        self, batch_size: int = None, max_length: int = None, variable: bool = False
+        self,
+        batch_size: int = None,
+        max_length: int = None,
     ):
-        r'''
+        r"""
         This funtion is the main function to generate a batch data on the fly
         has two variants which are trigger with @variable var.
 
@@ -52,9 +55,9 @@ class ListElements(BaseBatchGenerator):
         ]
 
         2- The second option generates variable lenght elements With a minimum
-        lenght of 2 and a miximum of max_lenght when a elements is < max_lenght 
+        lenght of 2 and a miximum of max_lenght when a elements is < max_lenght
         then it is padding with 0 until reach the max_lenght. Example: we want
-        to genearate batch with dimention (3,1,5) it will genreate something like 
+        to genearate batch with dimention (3,1,5) it will genreate something like
         {
             [1,2,3,0,0]
             [1,2,0,0,0]
@@ -63,8 +66,8 @@ class ListElements(BaseBatchGenerator):
 
         # Note that the numbers in the examples are only a representation and these
         are in reality a the probabilities or other kind of data.
-        
-        '''
+
+        """
         # esay way to only requir the first data
         parameters_min_max = self.building_data[: self.parameters]
 
@@ -73,18 +76,18 @@ class ListElements(BaseBatchGenerator):
         if max_length is None:
             max_length = self.max_length
 
-        if variable:
+        if self.variable_length:
             elements_length = np.random.randint(
                 low=2, high=max_length + 1, size=(batch_size,)
             )
-            elements_secuences, index_elements = self.for_secuence(
+            elements_secuences, index_elements = self.__for_secuence(
                 elements_length, parameters_min_max
             )
-            elements_secuences = self.padding_secuences(elements_secuences, max_length)
+            elements_secuences = self.__padding_secuences(elements_secuences, max_length)
 
         else:
             elements_length = [max_length for _ in range(batch_size)]
-            elements_secuences, index_elements = self.for_secuence(
+            elements_secuences, index_elements = self.__for_secuence(
                 elements_length, parameters_min_max
             )
             elements_secuences = np.stack(elements_secuences, axis=0)
