@@ -3,7 +3,8 @@ import logging
 import torch
 import numpy as np
 
-from actor.actor import Reward
+# from actor.actor import Reward
+from reward.reward import Reward
 from generator.evaluation import Evalution_batches
 from extras import extraElements
 from actor.actor import pr_vals_2_plot

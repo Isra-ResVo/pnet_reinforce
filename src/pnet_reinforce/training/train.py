@@ -2,7 +2,8 @@ import torch
 
 from generator.evaluation import Evalution_batches
 from extras import extraElements
-from actor.actor import Reward
+# from actor.actor import Reward
+from reward.reward import Reward
 
 
 def model_training(
