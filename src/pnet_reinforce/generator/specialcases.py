@@ -1,5 +1,5 @@
 import torch
-from pnet_reinforce.generator.generator.base import BaseBatchGenerator
+from generator.generator.base import BaseBatchGenerator
 
 
 class RandomGenerator(BaseBatchGenerator):

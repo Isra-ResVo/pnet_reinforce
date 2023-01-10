@@ -15,7 +15,7 @@ class DataToDevice(BaseBatchGenerator):
         super(DataToDevice, self).__init__(config)
 
     def assign_type_and_device(self, batch, indices):
-        
+
         if self.variable_length:
             # All the elements could has different shapes
             indices = map(
@@ -50,7 +50,7 @@ class Evalution_batches(BaseBatchGenerator):
         self.normalization = normalization
 
     def item_batch_evalution(
-        self, batch_size: int = None
+        self, alternative_batchsize: int = None
     ) -> tuple[np.ndarray, np.ndarray]:
         r"""
         This function only manages the logic in how to provide the data
@@ -75,12 +75,17 @@ class Evalution_batches(BaseBatchGenerator):
             # this is used in traning and when evalution doesn't require to use
             # elements in memory.
             batch, indices = self.list_elements.generate_elements_list(
-                batch_size=batch_size
+                batch_size=alternative_batchsize
             )
-        
+
         batch, indices = self.dataToDevice.assign_type_and_device(batch, indices)
 
-        data = DataRepresentation(batch, indices, self.config)
+        data = DataRepresentation(
+            batch=batch,
+            indices=indices,
+            config=self.config,
+            alternative_batchsize=alternative_batchsize,
+        )
 
         return data
 

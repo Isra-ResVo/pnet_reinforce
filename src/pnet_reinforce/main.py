@@ -47,7 +47,7 @@ def data_func(
     # batch: The data taken from cloud identificators
     new_generator = Evalution_batches(config)
     # batch, indices  = new_generator.item_batch_evalution(batch_size=batchSize)
-    data_object = new_generator.item_batch_evalution(batch_size=batchSize)
+    data_object = new_generator.item_batch_evalution(alternative_batchsize=batchSize)
 
     # len_elements = [i.shape[0] for i in indices]
 
@@ -60,55 +60,58 @@ def data_func(
     data["indices"] = data_object.indices
     data["batchNormal"] = data_object.batch_normalized
 
-    len_elements = data_object.elements_length
+    # len_elements = data_object.elements_length
 
     # if norm:
     #     data["batchNormal"] = normalization(batch)
 
-    def restriction_data(
-        config,
-        generator,
-        batchSize,
-        len_elements,
-        device,
-        default_restriction=10,
-    ):
-        if not config.item_in_memory:
-            restriction_data = generator.random_number_in_range_of_len_elements(
-                batchSize, len_elements
-            ).to(device)
-        else:
-            if config.variable_length:
-                restriction_data = generator.random_number_in_range_of_len_elements(
-                    batchSize, len_elements
-                ).to(device)
-            else:
-                restriction_data = torch.tensor(
-                    [default_restriction], dtype=torch.int64, device=device
-                )
-                if config.shape_at_disk == "batchelements":
-                    restriction_data.repeat(20)
-        return restriction_data
+    # def restriction_data(
+    #     config,
+    #     generator,
+    #     batchSize,
+    #     len_elements,
+    #     device,
+    #     default_restriction=10,
+    # ):
+    #     if not config.item_in_memory:
+    #         restriction_data = generator.random_number_in_range_of_len_elements(
+    #             batchSize, len_elements
+    #         ).to(device)
+    #     else:
+    #         if config.variable_length:
+    #             restriction_data = generator.random_number_in_range_of_len_elements(
+    #                 batchSize, len_elements
+    #             ).to(device)
+    #         else:
+    #             restriction_data = torch.tensor(
+    #                 [default_restriction], dtype=torch.int64, device=device
+    #             )
+    #             if config.shape_at_disk == "batchelements":
+    #                 restriction_data.repeat(20)
+    #     return restriction_data
 
-    if config.mode == "n" and not config.item_in_memory:
-        data["restricted_n"] = restriction_data(
-            config,
-            generator,
-            batchSize,
-            len_elements,
-            config.device,
-            default_restriction=10,
-        )
+    # if config.mode == "n" and not config.item_in_memory:
+    #     data["restricted_n"] = restriction_data(
+    #         config,
+    #         generator,
+    #         batchSize,
+    #         len_elements,
+    #         config.device,
+    #         default_restriction=10,
+    #     )
 
-    elif config.mode == "k" and not config.item_in_memory:
-        data["restricted_k"] = restriction_data(
-            config,
-            generator,
-            batchSize,
-            len_elements,
-            config.device,
-            default_restriction=2,
-        )
+    # elif config.mode == "k" and not config.item_in_memory:
+    #     data["restricted_k"] = restriction_data(
+    #         config,
+    #         generator,
+    #         batchSize,
+    #         len_elements,
+    #         config.device,
+    #         default_restriction=2,
+    #     )
+
+    data["restricted_n"] = data_object.restricted_n
+    data["restricted_k"] = data_object.restricted_k
 
     return data
 
