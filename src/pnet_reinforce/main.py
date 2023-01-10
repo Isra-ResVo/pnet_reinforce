@@ -18,36 +18,6 @@ from extras import plotting
 from extras import extraElements
 
 
-def data_func(
-    config,
-    batchSize: int = None,
-) -> dict:
-    r"""
-
-    Generate a dict with necessary data to train the model. This data is generated
-    on the fly based in reports presented in another investigations...
-
-    args
-    ------
-    shape_at_dist: str  [singleelement| batchelement]
-
-    """
-
-    data = {}
-
-    new_generator = Evalution_batches(config)
-    data_object = new_generator.item_batch_evalution(alternative_batchsize=batchSize)
-
-    data["len_elements"] = data_object.elements_length
-    data["batch"] = data_object.batch
-    data["indices"] = data_object.indices
-    data["batchNormal"] = data_object.batch_normalized
-    data["restricted_n"] = data_object.restricted_n
-    data["restricted_k"] = data_object.restricted_k
-
-    return data
-
-
 def train_epoch(
     pointer_net,
     critic_net,
@@ -59,7 +29,17 @@ def train_epoch(
 ):
     device = config.device
     # getting for training
-    data = data_func(config=config)
+
+    new_generator = Evalution_batches(config)
+    data_object = new_generator.item_batch_evalution()
+    data = {
+        "len_elements": data_object.elements_length,
+        "batch": data_object.batch,
+        "indices": data_object.indices,
+        "batchNormal": data_object.batch_normalized,
+        "restricted_n": data_object.restricted_n,
+        "restricted_k": data_object.restricted_k,
+    }
 
     # control if the batch input to model is normalized (bool)
     if config.normal:
@@ -113,16 +93,29 @@ def system_evaluation(
 
     print("valor de plot {}".format(plot))
 
+    data_generator = Evalution_batches(config)
+
     if evaluation:
         print(
             "Replace element in memory: ",
             config.replace_element_in_memory,
         )
-        data = data_func(config=config)
+        data_object = data_generator.item_batch_evalution()
 
     else:
         batchSize = 1
-        data = data_func(config=config, batchSize=batchSize)
+        data_object = data_generator.item_batch_evalution(
+            alternative_batchsize=batchSize
+        )
+
+    data = {
+        "len_elements": data_object.elements_length,
+        "batch": data_object.batch,
+        "indices": data_object.indices,
+        "batchNormal": data_object.batch_normalized,
+        "restricted_n": data_object.restricted_n,
+        "restricted_k": data_object.restricted_k,
+    }
 
     pointer_net.eval()
     critic_net.eval()
