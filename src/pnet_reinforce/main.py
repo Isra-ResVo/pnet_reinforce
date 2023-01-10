@@ -46,37 +46,24 @@ def data_func(
     # indices: what cloud identificator are selected from the static data provided
     # batch: The data taken from cloud identificators
     new_generator = Evalution_batches(config)
-    # if shape_at_disk == "singleelement" and config.item_in_memory:
-    #     batch, indices = generator.itemEvaluation(create=replace_element_in_memory)
-    # elif shape_at_disk == "batchelements" and config.item_in_memory:
-    #     batch, indices = generator.batchEvaluation(create=replace_element_in_memory)
-    # else:
-    #     variable = config.variable_length
-    #     batch, indices = generator.generate_elements_list(
-    #         batch_size=batchSize, variable=variable
-    #     )
+    # batch, indices  = new_generator.item_batch_evalution(batch_size=batchSize)
+    data_object = new_generator.item_batch_evalution(batch_size=batchSize)
 
-    batch, indices  = new_generator.item_batch_evalution(batch_size=batchSize)
+    # len_elements = [i.shape[0] for i in indices]
 
-    len_elements = [i.shape[0] for i in indices]
+    # data["len_elements"] = len_elements
+    # data["batch"] = batch
+    # data["indices"] = indices
 
-    data["len_elements"] = len_elements
+    data["len_elements"] = data_object.elements_length
+    data["batch"] = data_object.batch
+    data["indices"] = data_object.indices
+    data["batchNormal"] = data_object.batch_normalized
 
-    if config.variable_length:
-        indices = map(
-            lambda x: torch.tensor(x, device=device, dtype=torch.int64), indices
-        )
-    else:
-        indices = np.array(indices)
-        indices = torch.tensor(indices, device=device, dtype=torch.int64)
+    len_elements = data_object.elements_length
 
-    batch = torch.tensor(batch, device=device, dtype=torch.float32)
-
-    data["batch"] = batch
-    data["indices"] = indices
-
-    if norm:
-        data["batchNormal"] = normalization(batch)
+    # if norm:
+    #     data["batchNormal"] = normalization(batch)
 
     def restriction_data(
         config,

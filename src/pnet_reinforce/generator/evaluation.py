@@ -1,8 +1,34 @@
 import sys
 import pickle
+
 import numpy as np
+import torch
+
 from generator.generator.base import BaseBatchGenerator
 from generator.generator.list_elements import ListElements
+from generator.data_utils.normalization import normalization
+from generator.data_interface.data import DataRepresentation
+
+
+class DataToDevice(BaseBatchGenerator):
+    def __init__(self, config):
+        super(DataToDevice, self).__init__(config)
+
+    def assign_type_and_device(self, batch, indices):
+        
+        if self.variable_length:
+            # All the elements could has different shapes
+            indices = map(
+                lambda x: torch.tensor(x, device=self.device, dtype=torch.int64),
+                indices,
+            )
+        else:
+            # All the elements has the same shapes
+            indices = np.array(indices)
+            indices = torch.tensor(indices, device=self.device, dtype=torch.int64)
+
+        batch = torch.tensor(batch, device=self.device, dtype=torch.float32)
+        return batch, indices
 
 
 class Evalution_batches(BaseBatchGenerator):
@@ -20,12 +46,14 @@ class Evalution_batches(BaseBatchGenerator):
     def __init__(self, config):
         super(Evalution_batches, self).__init__(config=config)
         self.list_elements = ListElements(config=config)
+        self.dataToDevice = DataToDevice(config=config)
+        self.normalization = normalization
 
     def item_batch_evalution(
         self, batch_size: int = None
     ) -> tuple[np.ndarray, np.ndarray]:
         r"""
-        This fucntion only manages the logic in how to provide the data
+        This function only manages the logic in how to provide the data
         based in the configuration. This configuration is based on the
         shape of elements (multi elements or single element), if use
         the item in memory or ignore it and use the predifined batch shape.
@@ -49,8 +77,12 @@ class Evalution_batches(BaseBatchGenerator):
             batch, indices = self.list_elements.generate_elements_list(
                 batch_size=batch_size
             )
+        
+        batch, indices = self.dataToDevice.assign_type_and_device(batch, indices)
 
-        return batch, indices
+        data = DataRepresentation(batch, indices, self.config)
+
+        return data
 
     def __item_evaluation(self):
         variable_length = self.variable_length
