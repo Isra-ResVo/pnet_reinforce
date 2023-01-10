@@ -3,10 +3,10 @@ import logging
 import torch
 import numpy as np
 
-from actor import Reward
+from actor.actor import Reward
 from generator.evaluation import Evalution_batches
 from extras import extraElements
-from actor import pr_vals_2_plot
+from actor.actor import pr_vals_2_plot
 from extras import plotting
 
 
@@ -16,10 +16,10 @@ def model_evaluation(
     pointer_net,
     critic_net,
     config,
-    plot=False,
+    plot: float = False,
     path: str = None,
     printOpt: float = False,
-    evaluation: float = False,
+    is_training: float = False,
 ):
     device = config.device
 
@@ -27,18 +27,19 @@ def model_evaluation(
 
     data_generator = Evalution_batches(config)
 
-    if evaluation:
+    if is_training:
+        data_object = data_generator.item_batch_evalution(
+            alternative_batchsize=1
+        )
+
+    else:
+        
         print(
             "Replace element in memory: ",
             config.replace_element_in_memory,
         )
         data_object = data_generator.item_batch_evalution()
 
-    else:
-        batchSize = 1
-        data_object = data_generator.item_batch_evalution(
-            alternative_batchsize=batchSize
-        )
 
     data = {
         "len_elements": data_object.elements_length,
@@ -52,11 +53,11 @@ def model_evaluation(
     pointer_net.eval()
     critic_net.eval()
 
-    logging.info("valores generados para el modelo:\n %s \n", str(data["batch"]))
-    logging.info("indices del batch:\n\t %s", str(data["indices"]))
+    logging.info("valores generados para el modelo:\n %s \n", str(data_object.batch))
+    logging.info("indices del batch:\n\t %s", str(data_object.indices))
 
     if config.normal:
-        batch = data["batchNormal"]
+        batch = data_object.batch_normalized
 
         if config.extraElements == "elementsInBatch":
             oneElement = True if config.mode == "k" else False
@@ -64,11 +65,11 @@ def model_evaluation(
             batch = torch.cat((batch, extraEle), dim=2)
 
     else:
-        batch = data["batch"]
+        batch = data_object.batch
 
     # Inference
     selections, log_probs = pointer_net(batch, data)
-    batch_steps = data["batch"].shape[2]
+    batch_steps = data_object.batch.shape[2]
 
     if config.mode == "k":
         reward = Reward(selections, device, batch_steps, config, data)

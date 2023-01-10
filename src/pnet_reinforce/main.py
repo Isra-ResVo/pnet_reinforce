@@ -9,7 +9,7 @@ from config import get_config, print_config
 from training.train import model_training
 from evaluation.evaluation import model_evaluation
 from utils import load_weight, save_model
-from actor import Actor
+from actor.actor import Actor
 from critic import Critic
 
 
@@ -68,14 +68,18 @@ def main():
     epochs = config.num_epoch
     stepsByEpochs = 500
 
-    # Trainin Mode
+
     if config.train_mode:
 
         print("[INFO]: Traning model\n")
         if config.load_model:
-            # Load model pre-trained
             pointer_net, critic_net, opt_poiner, opt_critic = load_weight(
-                config, pointer_net, critic_net, opt_pointer, opt_critic, device
+                config=config,
+                pointer_net=pointer_net,
+                critic_net=critic_net,
+                opt_pointer=opt_critic,
+                opt_critic=opt_critic,
+                device=config.device,
             )
 
         else:
@@ -92,9 +96,7 @@ def main():
                     cretic_net=critic_net,
                     opt_pointer=opt_pointer,
                     opt_critic=opt_critic,
-                    # generator,
                     MSEloss=MSEloss,
-                    # device,
                     schedulers=schedulers,
                     config=config,
                 )
@@ -127,6 +129,7 @@ def main():
                     config=config,
                     plot=plot,
                     path=path,
+                    is_training=True,
                 )
 
         if config.save_model:
@@ -149,7 +152,6 @@ def main():
             plot=plot,
             path=path,
             printOpt=False,
-            evaluation=True,
         )
 
 
