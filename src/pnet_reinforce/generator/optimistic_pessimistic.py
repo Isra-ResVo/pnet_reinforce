@@ -16,6 +16,8 @@ def optimisticPessimistic(selected_clouds_indices) -> np.ndarray:
     the worst and better probality of one set of clouds. This can be used to graph
     and compare where the solution with respect to this these values.
 
+    This fucntion is not used
+
     CSP = Cloud service provider
     """
     # Get the values the probabilities from a dict

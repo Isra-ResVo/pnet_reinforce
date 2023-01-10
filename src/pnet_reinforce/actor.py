@@ -1,14 +1,14 @@
 import torch
 from torch import nn
 import itertools
-import numpy as np
-import extras
 import logging
 from scipy.special import factorial
 
 # ---------- local modules ------------
 from pointer import Pointer
-from batchGenerator import optimisticPessimistic
+
+# this function was disable by ask of the dr
+# from batchGenerator import optimisticPessimistic 
 
 # import matplotlib.pyplot as plt
 
@@ -20,7 +20,7 @@ class Actor(nn.Module):
         # ---------------Variables----------------------------
 
         self.config = config
-        self.device = device
+        self.device = config.device
         self.log = logging.getLogger(__name__)
 
         # Data Input Config

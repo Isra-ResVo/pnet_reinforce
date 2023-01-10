@@ -13,22 +13,14 @@ from actor import Actor
 from actor import Reward
 from actor import pr_vals_2_plot
 from critic import Critic
-from batchGenerator import batchGenerator
 from config import get_config, print_config
 from extras import plotting
-from extras import labelsFunc
-from extras import normalization
 from extras import extraElements
 
 
 def data_func(
-    generator,
     config,
-    device,
-    norm=False,
     batchSize: int = None,
-    shape_at_disk: str = None,
-    replace_element_in_memory: bool = None,
 ) -> dict:
     r"""
 
@@ -61,14 +53,13 @@ def train_epoch(
     critic_net,
     opt_pointer,
     opt_critic,
-    generator,
     MSEloss,
-    device,
     schedulers,
     config,
 ):
+    device = config.device
     # getting for training
-    data = data_func(generator, config, device, config.normal)
+    data = data_func(config=config)
 
     # control if the batch input to model is normalized (bool)
     if config.normal:
@@ -112,14 +103,13 @@ def train_epoch(
 def system_evaluation(
     pointer_net,
     critic_net,
-    generator,
     config,
-    device,
     plot=False,
-    path=None,
-    printOpt=False,
+    path: str = None,
+    printOpt: float = False,
     evaluation: float = False,
 ):
+    device = config.device
 
     print("valor de plot {}".format(plot))
 
@@ -128,20 +118,11 @@ def system_evaluation(
             "Replace element in memory: ",
             config.replace_element_in_memory,
         )
-        data = data_func(
-            generator,
-            config,
-            device,
-            config.normal,
-            shape_at_disk=config.shape_at_disk,
-            replace_element_in_memory=config.replace_element_in_memory,
-        )
-
-
+        data = data_func(config=config)
 
     else:
         batchSize = 1
-        data = data_func(generator, config, device, config.normal, batchSize=batchSize)
+        data = data_func(config=config, batchSize=batchSize)
 
     pointer_net.eval()
     critic_net.eval()
@@ -471,7 +452,6 @@ def main():
     # Nerwork initialization
     pointer_net = Actor(config, device)
     critic_net = Critic(config, device)  # solo en su entrenamiento
-    generator = batchGenerator(config)
 
     # Assingning models to Device GPU o CPU (Default)
     pointer_net.to(device)
@@ -530,15 +510,15 @@ def main():
             for i in range(stepsByEpochs):
 
                 train_epoch(
-                    pointer_net,
-                    critic_net,
-                    opt_pointer,
-                    opt_critic,
-                    generator,
-                    MSEloss,
-                    device,
-                    schedulers,
-                    config,
+                    pointer_net=pointer_net,
+                    cretic_net=critic_net,
+                    opt_pointer=opt_pointer,
+                    opt_critic=opt_critic,
+                    # generator,
+                    MSEloss=MSEloss,
+                    # device,
+                    schedulers=schedulers,
+                    config=config,
                 )
 
                 if (i % 200 == 0) and (i > 0):
@@ -566,9 +546,7 @@ def main():
                 system_evaluation(
                     pointer_net=pointer_net,
                     crictic_net=critic_net,
-                    generator=generator,
                     config=config,
-                    device=device,
                     plot=plot,
                     path=path,
                 )
@@ -594,9 +572,7 @@ def main():
         system_evaluation(
             pointer_net=pointer_net,
             critic_net=critic_net,
-            generator=generator,
             config=config,
-            device=device,
             plot=plot,
             path=path,
             printOpt=False,
