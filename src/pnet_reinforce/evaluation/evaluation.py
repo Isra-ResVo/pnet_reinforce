@@ -101,7 +101,7 @@ def model_evaluation(
             "normRed": rewardDict["normRed"][index],
             # values to compare
             "n_position": reward.n_inferred[index],
-            "k_position": reward.n_inferred[index],
+            "k_position": reward.k_inferred[index],
             "onlyClouds": reward.selected_clouds[index],
             "batchQntClouds": data["len_elements"][index],
         }
@@ -255,7 +255,7 @@ def model_evaluation(
             )
             print("\n\nSelecton of tuple (k,n):")
             print("\tn quantity: ", reward.n_inferred[index])
-            print("\tk quantity: ", reward.n_inferred[index])
+            print("\tk quantity: ", reward.k_inferred[index])
             print(
                 "\t --->valor de comparacion (normRed+prError)/2: {}".format(
                     (point["normRed"] + point["value_error"]) / 2
@@ -269,7 +269,7 @@ def model_evaluation(
 
         print2word = False
         text["n"] = reward.n_inferred[index].item()
-        text["k"] = reward.n_inferred[index].item()
+        text["k"] = reward.k_inferred[index].item()
         text["redundancy"] = rewardDict["redundancy"][index]
         text["prn_ln"] = point["prn_ln"]
         text["rn"] = rewardDict["normRed"][index]
@@ -301,7 +301,7 @@ def model_evaluation(
 
     if config.statistic:
         print("valores adquiridos para la tupla")
-        for i, (val_k, val_n) in enumerate(zip(reward.n_inferred, reward.n_inferred)):
+        for i, (val_k, val_n) in enumerate(zip(reward.k_inferred, reward.n_inferred)):
             print(
                 "Experimento no.{}, valor de la tupla({},{})".format(
                     i + 1, val_k, val_n
