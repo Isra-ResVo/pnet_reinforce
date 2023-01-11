@@ -74,7 +74,7 @@ def model_evaluation(
         device=device,
         qnt_steps=batch_steps,
         config=config,
-        value_k=data["restricted_k"],
+        value_k=data_object.restricted_k,
     )
     reward = Reward(reward_config=reward_config)
     reward_grouped = reward.main(data)
@@ -101,7 +101,7 @@ def model_evaluation(
             "n_position": reward_grouped.n_inferred[index],
             "k_position": reward_grouped.k_inferred[index],
             "onlyClouds": reward_grouped.selected_clouds[index],
-            "batchQntClouds": data["len_elements"][index],
+            "batchQntClouds":  data_object.elements_length[index],
         }
 
         # Elements to populate for plotting reasons

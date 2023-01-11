@@ -51,7 +51,7 @@ class Evalution_batches(BaseBatchGenerator):
 
     def item_batch_evalution(
         self, alternative_batchsize: int = None
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> DataRepresentation:
         r"""
         This function only manages the logic in how to provide the data
         based in the configuration. This configuration is based on the
