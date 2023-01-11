@@ -4,10 +4,10 @@ import torch
 import numpy as np
 
 # from actor.actor import Reward
-from reward.reward import Reward
+from reward.reward import Reward, RewardConfig
 from generator.evaluation import Evalution_batches
 from extras import extraElements
-from actor.actor import pr_vals_2_plot
+from utils.plotter_data_helper import pr_vals_2_plot
 from extras import plotting
 
 
@@ -72,10 +72,11 @@ def model_evaluation(
     selections, log_probs = pointer_net(batch, data)
     batch_steps = data_object.batch.shape[2]
 
+    reward_config = RewardConfig(selections=selections, device=device, qnt_steps=batch_steps, config=config, value_k=data["restricted_k"])
     if config.mode == "k":
-        reward = Reward(selections, device, batch_steps, config, data)
+        reward = Reward(reward_config=reward_config)
     else:
-        reward = Reward(selections, device, batch_steps, config)
+        reward = Reward(reward_config=reward_config)
 
     rewardDict = reward.main(data)
 
@@ -99,9 +100,9 @@ def model_evaluation(
             "redundancy": rewardDict["redundancy"][index],
             "normRed": rewardDict["normRed"][index],
             # values to compare
-            "n_position": reward.sel_n[index],
-            "k_position": reward.k_sum[index],
-            "onlyClouds": reward.only_clouds[index],
+            "n_position": reward.n_inferred[index],
+            "k_position": reward.n_inferred[index],
+            "onlyClouds": reward.selected_clouds[index],
             "batchQntClouds": data["len_elements"][index],
         }
 
@@ -253,8 +254,8 @@ def model_evaluation(
                 )
             )
             print("\n\nSelecton of tuple (k,n):")
-            print("\tn quantity: ", reward.sel_n[index])
-            print("\tk quantity: ", reward.k_sum[index])
+            print("\tn quantity: ", reward.n_inferred[index])
+            print("\tk quantity: ", reward.n_inferred[index])
             print(
                 "\t --->valor de comparacion (normRed+prError)/2: {}".format(
                     (point["normRed"] + point["value_error"]) / 2
@@ -267,8 +268,8 @@ def model_evaluation(
                 print("\t", rewardDict[key][index])
 
         print2word = False
-        text["n"] = reward.sel_n[index].item()
-        text["k"] = reward.k_sum[index].item()
+        text["n"] = reward.n_inferred[index].item()
+        text["k"] = reward.n_inferred[index].item()
         text["redundancy"] = rewardDict["redundancy"][index]
         text["prn_ln"] = point["prn_ln"]
         text["rn"] = rewardDict["normRed"][index]
@@ -300,7 +301,7 @@ def model_evaluation(
 
     if config.statistic:
         print("valores adquiridos para la tupla")
-        for i, (val_k, val_n) in enumerate(zip(reward.k_sum, reward.sel_n)):
+        for i, (val_k, val_n) in enumerate(zip(reward.n_inferred, reward.n_inferred)):
             print(
                 "Experimento no.{}, valor de la tupla({},{})".format(
                     i + 1, val_k, val_n

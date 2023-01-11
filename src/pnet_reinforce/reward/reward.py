@@ -1,5 +1,5 @@
-import itertools
 import logging
+from abc import ABC, abstractmethod
 
 import torch
 
@@ -7,60 +7,95 @@ from generator.generator.initial_data import TIME, REDUNDANCY
 from reward.error_func import error_function, pr_error_bound
 
 
-class Reward(object):
-    # this can be changed by any of the formulas given in reward.error_func module
-    error_formula = pr_error_bound
+class RewardConfig(object):
+
+    r"""
+    This function save all the necessesary data to process the
+    required output based in the initial state.
+    """
 
     def __init__(self, selections, device, qnt_steps, config, value_k=None):
-        self.k_key = qnt_steps
-        self.log = logging.getLogger(__name__)
+        self.wild_card_element = qnt_steps
         self.config = config
         self.device = device
-        self.arrangenment = selections
+        self.model_selections = selections
 
-        self.dictRedundancy = REDUNDANCY
+        self.error_formula = pr_error_bound
+
+        self.redundancy_values = REDUNDANCY
         self.time = TIME
 
+        # Generate values
         if self.config.mode == "k":
             if value_k is None:
                 raise ValueError(" value_k must be given")
-            self.only_clouds, self.k_sum, self.sel_n = self.get_k_and_clouds(value_k)
+            self.selected_clouds, self.k_inferred, self.n_inferred = self.get_k_and_clouds(value_k)
         else:
-            self.only_clouds, self.k_sum, self.sel_n = self.get_k_and_clouds()
+            self.selected_clouds, self.k_inferred, self.n_inferred = self.get_k_and_clouds()
 
     def get_k_and_clouds(self, value_k=None):
+        r"""
+        The model select membres of every element in the batch in a loop way. With this
+        context before this begin the `pointer_network` adds an extra element as wild card
+        and when this wild card is selected the next iterations only will select this wild
+        card that have no value in the Reward calculation.
 
+        This wild card can be replaced by another network that calculate the probability of
+        choose other element or end the secuence. Maybe can do a better work...
+
+        return:
+        --------
+        `selected_clouds`: List of cloud selected by the model
+        `k_inferred: array`: Value of inferred of k
+        `n_inferred: array`: Value of inferred of n
+        """
+        selected_clouds = []
         if self.config.mode == "k":
-            # validadation
-            if value_k is None:
-                raise ValueError("value_k is None, k must be provided")
-            k_sum = value_k
+            k_inferred = value_k
             # Element in the batch that serves as either stop condition or like fill  element
             #  In this case only reassingned a variable name for readability
-            stopElement_mask = ~(self.arrangenment == self.k_key)
+            wild_card_mask = ~(self.model_selections == self.wild_card_element)
 
-            cloud_list = []
-            for mask, arrange in zip(stopElement_mask, self.arrangenment):
-                cloud_list.append(torch.masked_select(arrange, mask))
+            for mask, arrange in zip(wild_card_mask, self.model_selections):
+                selected_clouds.append(torch.masked_select(arrange, mask))
 
-            qnt_clouds = torch.sum(stopElement_mask, dim=1)
+            n_inferred = torch.sum(wild_card_mask, dim=1)
 
         else:
             # This section serves for n and n_k configurations
 
-            k_qnt = self.arrangenment == self.k_key
-            k_sum = torch.sum(k_qnt.type(torch.int64), dim=1) + 2
+            k_qnt = self.model_selections == self.wild_card_element
+            k_inferred = torch.sum(k_qnt.type(torch.int64), dim=1) + 2
 
-            stop_position = self.arrangenment == self.k_key + 1
+            stop_position = self.model_selections == self.wild_card_element + 1
             mask_clouds = ~(k_qnt + stop_position).type(torch.bool)
 
-            cloud_list = []
-            for mask, arrange in zip(mask_clouds, self.arrangenment):
-                cloud_list.append(torch.masked_select(arrange, mask))
+            for mask, arrange in zip(mask_clouds, self.model_selections):
+                selected_clouds.append(torch.masked_select(arrange, mask))
 
-            qnt_clouds = torch.sum(mask_clouds, dim=1)
+            n_inferred = torch.sum(mask_clouds, dim=1)
 
-        return cloud_list, k_sum, qnt_clouds
+        return selected_clouds, k_inferred, n_inferred
+
+
+class BaseReward(ABC):
+    def __init__(self, reward_config: RewardConfig):
+        self.k_inferred = reward_config.k_inferred
+        self.n_inferred = reward_config.n_inferred
+        self.selected_clouds = reward_config.selected_clouds
+        self.device = reward_config.device
+
+        self.redundancy_values = reward_config.redundancy_values
+        self.time = reward_config.time
+        self.error_formula = pr_error_bound
+
+        self.config = reward_config.config
+
+
+class Reward(BaseReward):
+    # this can be changed by any of the formulas given in reward.error_func module
+    def __init__(self, reward_config: RewardConfig):
+        super(Reward, self).__init__(reward_config=reward_config)
 
     def main(self, kwargs) -> torch.Tensor:
 
@@ -69,17 +104,17 @@ class Reward(object):
 
         # prError for model selections
         size_subsets = (
-            self.sel_n - self.k_sum
+            self.n_inferred - self.k_inferred
         ) + 1  #  subset size to have to fail before +2
         pr_error = self.error_formula(
-            batch=kwargs["batch"], subsets=size_subsets, only_clouds=self.only_clouds
+            batch=kwargs["batch"], subsets=size_subsets, only_clouds=self.selected_clouds
         )
         # reward['prError'] = pr_error
         reward["prError"] = pr_error
 
         # min and max for normalization process
 
-        maximum, minimum = self.min_max_error(kwargs=kwargs)
+        maximum, minimum = self.__min_max_error(kwargs=kwargs)
 
         print("probabilidad de error", pr_error)
         print("maximum", maximum)
@@ -105,7 +140,9 @@ class Reward(object):
         reward["redundancy"] = self.redundancy()
         # print('valor de redundancia', reward['redundancy'])
 
-        maximum, minimum = self.min_max_redundancy(len_elements=kwargs["len_elements"])
+        maximum, minimum = self.__min_max_redundancy(
+            len_elements=kwargs["len_elements"]
+        )
         # print('minimos y maximos\n', maximum,'\n', minimum)
 
         reward["normRed"] = (reward["redundancy"] - minimum) / (
@@ -122,7 +159,7 @@ class Reward(object):
 
         return reward
 
-    def min_max_redundancy(self, len_elements):
+    def __min_max_redundancy(self, len_elements):
 
         r"""
 
@@ -136,17 +173,17 @@ class Reward(object):
         if mode == "n":
             maximum, minimum = [], []
 
-            for n in self.sel_n:
+            for n in self.n_inferred:
                 keys = [str(i) + str(n.item()) for i in range(2, n + 1)]
-                inicialVal = self.dictRedundancy[keys[0]]
+                inicialVal = self.redundancy_values[keys[0]]
                 maxV, minV = inicialVal, inicialVal
 
                 for k in keys:
-                    if maxV < self.dictRedundancy[k]:
-                        maxV = self.dictRedundancy[k]
+                    if maxV < self.redundancy_values[k]:
+                        maxV = self.redundancy_values[k]
 
-                    if minV > self.dictRedundancy[k]:
-                        minV = self.dictRedundancy[k]
+                    if minV > self.redundancy_values[k]:
+                        minV = self.redundancy_values[k]
 
                 maximum.append(maxV)
                 minimum.append(minV)
@@ -161,8 +198,8 @@ class Reward(object):
             # for n_element_batch in len_elements:
             #     limit_keys.append( ((n_element_batch)*(n_element_batch-1)) /2 )
 
-            # for i, key in enumerate(self.dictRedundancy):
-            #     val = self.dictRedundancy[key]
+            # for i, key in enumerate(self.redundancy_values):
+            #     val = self.redundancy_values[key]
 
             #     if i == 0:
             #         minimum = val
@@ -184,20 +221,19 @@ class Reward(object):
             keys = [str(2) + str(i) for i in len_elements]
             maximum = []
             for key in keys:
-                maximum.append(self.dictRedundancy[key])
+                maximum.append(self.redundancy_values[key])
             maximum = torch.tensor(maximum, dtype=torch.float32, device=self.device)
 
         elif mode == "k":
 
             maximum, minimum = [], []
-            for k, n in zip(self.k_sum, len_elements):
+            for k, n in zip(self.k_inferred, len_elements):
                 keys = [str(k.item()) + str(i) for i in range(k, n + 1)]
-                self.log.info("valores de k: %s", str(keys))
-                val = self.dictRedundancy[keys[0]]
+                val = self.redundancy_values[keys[0]]
                 maxV, minV = val, val
 
                 for key in keys:
-                    val = self.dictRedundancy[key]
+                    val = self.redundancy_values[key]
                     if maxV < val:
                         maxV = val
                     if minV > val:
@@ -214,7 +250,7 @@ class Reward(object):
 
         return maximum, minimum
 
-    def min_max_error(self, kwargs) -> torch.Tensor:
+    def __min_max_error(self, kwargs) -> torch.Tensor:
 
         r"""
         To calculate in the case when n y k is choosen for the system
@@ -226,7 +262,7 @@ class Reward(object):
         """
         batch = kwargs["batch"]
         siz, par, qnt = batch.shape
-        # warning cambiar sel_n a algo como variable de apoyo, ya que bien puede tomar los valores de k o n
+        # warning cambiar n_inferred a algo como variable de apoyo, ya que bien puede tomar los valores de k o n
         # segun la configuracion que se tiene.
 
         # This section if for obtain max value of error
@@ -368,12 +404,12 @@ class Reward(object):
         """
 
         rewardR = []
-        for (k_i, n_i) in zip(self.k_sum, self.sel_n):
+        for (k_i, n_i) in zip(self.k_inferred, self.n_inferred):
 
             key = str(k_i.cpu().numpy()) + str(n_i.cpu().numpy())
             rewardR.append(
                 torch.tensor(
-                    self.dictRedundancy.get(key, None),
+                    self.redundancy_values.get(key, None),
                     dtype=torch.float32,
                     device=self.device,
                 )
@@ -385,15 +421,9 @@ class Reward(object):
 
     def extraction_time(self):
 
-        cloud_n = self.sel_n
-        k_qnt = self.k_sum
-
-        cloud_n = cloud_n.to("cpu")
-        k_qnt = k_qnt("cpu")
-
         rwd_time = []
 
-        for (k_i, n_i) in zip(self.k_sum, self.cl):
+        for (k_i, n_i) in zip(self.k_inferred, self.n_inferred):
 
             k = str(k_i.cpu().numpy())
             n = str(n_i.cpu().numpy())
@@ -419,7 +449,7 @@ class Reward(object):
                 n = point["batchQntClouds"]
 
             limitKeys = ((n) * (n - 1)) / 2
-            iterable = self.dictRedundancy
+            iterable = self.redundancy_values
 
         elif mode == "n":
 
@@ -436,7 +466,7 @@ class Reward(object):
             iterable = [str(k.item()) + str(i) for i in range(k, n + 1)]
 
         for i, key in enumerate(iterable):
-            val = self.dictRedundancy[key]
+            val = self.redundancy_values[key]
             redundancy.append(val)
 
             if i == 0:

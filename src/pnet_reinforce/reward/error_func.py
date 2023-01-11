@@ -1,10 +1,10 @@
 import torch
 import itertools
 
+
 def error_function(
     self=None, batch=None, subsets: "list" = None, only_clouds: "list" = None
 ) -> "float":
-    # Note this function uses itertools.combinations and for this reason could be too computationally expensive
 
     r"""
     Here the variables subsets and only clouds are dtype list
@@ -94,9 +94,9 @@ def pr_error_bound(
     for i, (subset, clouds, binomial) in enumerate(
         zip(subsets, only_clouds, logBinomialCoefficient)
     ):
-        clouds = torch.sort(clouds)[
-            0
-        ]  # when you work with high precition float, to make operation in different order can give similar but diffetent values
+        # when you work with high precition float, to make operation in different
+        #  order can give similar but diffetent values
+        clouds = torch.sort(clouds)[0]
 
         combination = torch.topk(batch[i, 0, clouds], subset, largest=True)[1]
         combination = clouds[combination]

@@ -8,7 +8,7 @@ import logging
 from config import get_config, print_config
 from training.train import model_training
 from evaluation.evaluation import model_evaluation
-from utils import load_weight, save_model
+from utils.utils import load_weight, save_model
 from actor.actor import Actor
 from critic import Critic
 
