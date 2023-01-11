@@ -10,6 +10,8 @@ from extras import extraElements
 from utils.plotter_data_helper import pr_vals_2_plot
 from extras import plotting
 
+from reward.helpers import HelperPlottingPoints
+
 
 def model_evaluation(
     pointer_net,
@@ -169,6 +171,7 @@ def model_evaluation(
                 tuples_data_and_names.append((pr_normalized_plot, local_name))
 
         if "redundancy" in config.whatToGraph:
+            helper_data_redundancy = HelperPlottingPoints(reward_config=reward_config)
             localNames = ["Redundancia"]
             (
                 redundancy,
@@ -176,7 +179,7 @@ def model_evaluation(
                 degR,
                 minimum,
                 maximum,
-            ) = reward.redundancyValsPlot(
+            ) = helper_data_redundancy.redundancyValsPlot(
                 point=point, config=config, kwargs=data, index=index
             )
             text["redundancymax"] = maximum
@@ -302,7 +305,9 @@ def model_evaluation(
 
     if config.statistic:
         print("valores adquiridos para la tupla")
-        for i, (val_k, val_n) in enumerate(zip(reward_config.k_inferred, reward_config.n_inferred)):
+        for i, (val_k, val_n) in enumerate(
+            zip(reward_config.k_inferred, reward_config.n_inferred)
+        ):
             print(
                 "Experimento no.{}, valor de la tupla({},{})".format(
                     i + 1, val_k, val_n
