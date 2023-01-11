@@ -2,6 +2,7 @@ import torch
 
 from reward.base import RewardConfig, BaseReward
 from reward.min_max import MaxMinError, MaxMinRedundancy
+from reward.reward_representation import DataSolution
 
 
 class Reward(BaseReward):
@@ -13,19 +14,20 @@ class Reward(BaseReward):
     def main(self, kwargs) -> torch.Tensor:
 
         reward = {}
+        grouped_rewards = DataSolution()
         epsilon = 1e-35
 
         # prError for model selections
         size_subsets = (
             self.n_inferred - self.k_inferred
         ) + 1  #  subset size to have to fail before +2
-        pr_error = self.error_formula(
+        probability_of_error = self.error_formula(
             batch=kwargs["batch"],
             subsets=size_subsets,
             only_clouds=self.selected_clouds,
         )
         # reward['prError'] = pr_error
-        reward["prError"] = pr_error
+        grouped_rewards.probability_of_error = probability_of_error
 
         # min and max for normalization process
         max_min_prbobality_of_error = MaxMinError(reward_config=self.reward_config)
@@ -45,14 +47,18 @@ class Reward(BaseReward):
         #     normError = (pr_error - minimum) / (maximum - minimum +epsilon)
         #     reward['normError'] = normError
 
-        normError = (pr_error - minimum) / (maximum - minimum + epsilon)
-        reward["normError"] = normError
-
+        # normalized
+        normalized_pr_error = (probability_of_error - minimum) / (
+            maximum - minimum + epsilon
+        )
+        grouped_rewards.normalized_pr_error = normalized_pr_error
         # print("reward[normError]", reward["normError"])
         # print('valores normalizados de error de fallo', reward['normError'])
 
         # Redundancy and normalization
-        reward["redundancy"] = self.redundancy()
+        redundancy = self.__redundancy()
+        grouped_rewards.redundancy = redundancy
+
         max_min_redundancy_of_service = MaxMinRedundancy(
             reward_config=self.reward_config
         )
@@ -60,21 +66,28 @@ class Reward(BaseReward):
             len_elements=kwargs["len_elements"]
         )
 
-        reward["normRed"] = (reward["redundancy"] - minimum) / (
-            maximum - minimum + epsilon
-        )
+        normalized_redundancy = (redundancy - minimum) / (maximum - minimum + epsilon)
+        grouped_rewards.normalized_redundancy = normalized_redundancy
 
         # Ponderate
-        reward["ponderate"] = (
-            self.config.wo[0] * reward["normError"]
-            + self.config.wo[1] * reward["normRed"]
+        ponderate_objetive = (
+            self.config.wo[0] * normalized_pr_error
+            + self.config.wo[1] * normalized_redundancy
         )
+        grouped_rewards.ponderate_objetive = ponderate_objetive
         # This ponderation was deactivate for not show improvent in the learnign
         # reward['ponderate'] = 10/(1-torch.log(reward['ponderate'])) # realizar cambios d
 
+        reward["prError"] = grouped_rewards.probability_of_error
+        reward["normError"] = grouped_rewards.normalized_pr_error
+        reward["redundancy"] = grouped_rewards.redundancy
+        reward["normRed"] = grouped_rewards.normalized_redundancy
+        reward["ponderate"] = grouped_rewards.ponderate_objetive
+
+
         return reward
 
-    def redundancy(self):
+    def __redundancy(self):
         r"""
         This values are experimental values from real comfigurations. This values were retrivied from previous
         literature

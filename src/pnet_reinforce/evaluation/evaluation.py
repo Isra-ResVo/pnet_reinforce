@@ -76,11 +76,7 @@ def model_evaluation(
         config=config,
         value_k=data["restricted_k"],
     )
-    if config.mode == "k":
-        reward = Reward(reward_config=reward_config)
-    else:
-        reward = Reward(reward_config=reward_config)
-
+    reward = Reward(reward_config=reward_config)
     rewardDict = reward.main(data)
 
     val_statistic = {
@@ -102,6 +98,7 @@ def model_evaluation(
             "prError1": 0,
             "redundancy": rewardDict["redundancy"][index],
             "normRed": rewardDict["normRed"][index],
+            
             # values to compare
             "n_position": reward_config.n_inferred[index],
             "k_position": reward_config.k_inferred[index],
