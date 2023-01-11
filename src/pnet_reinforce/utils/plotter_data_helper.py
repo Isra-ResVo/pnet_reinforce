@@ -1,8 +1,8 @@
 import torch
-from reward.reward import pr_error_bound
-# Funtions declarated  to Reward class in outer scope
-# Caution be aware with the self argument, bacaise is the first argument  from the system
+from reward.error_func import pr_error_bound
+
 selected_error_formula = pr_error_bound
+
 
 def pr_vals_2_plot(toCompareInPlot, kwargs, point, config, device, idxEle=0):
     # agregar config
@@ -95,7 +95,7 @@ def pr_vals_2_plot(toCompareInPlot, kwargs, point, config, device, idxEle=0):
         subsets = torch.arange(1, siz + 1, dtype=torch.int64, device=device)
 
     else:
-        raise ValueError("imvalid mode fix")
+        raise ValueError("invalid mode fix")
 
     if mode == "k" or mode == "n":
         for onlyCloud in onlyCloudsBatch:
@@ -148,7 +148,7 @@ def pr_vals_2_plot(toCompareInPlot, kwargs, point, config, device, idxEle=0):
 
 def all_combinations(
     batch, config, idx_batch=0, kwargs=None, device="cpu", largest=False
-) -> torch.Tensor:
+) -> torch.tensor:
     r"""
     All the combinations for k and n, with all the providers taken in the batch, for instance:
     if we have n = 3 in the batch,  then the conbination for tuple(n,k) are
