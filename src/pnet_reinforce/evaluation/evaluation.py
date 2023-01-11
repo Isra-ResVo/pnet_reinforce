@@ -77,7 +77,7 @@ def model_evaluation(
         value_k=data["restricted_k"],
     )
     reward = Reward(reward_config=reward_config)
-    rewardDict = reward.main(data)
+    reward_grouped = reward.main(data)
 
     val_statistic = {
         "pr_ln": [],
@@ -88,21 +88,19 @@ def model_evaluation(
         "won": [],
     }
 
-    print("reward dict this is used in the posteriori calculus", rewardDict["prError"])
-
     for index, _ in enumerate(batch):
 
         # Dict with values of first element of inference and print it in plot to see model performance
         point = {
-            "value_error": rewardDict["prError"][index],
+            "value_error":  reward_grouped.probability_of_error[index],
             "prError1": 0,
-            "redundancy": rewardDict["redundancy"][index],
-            "normRed": rewardDict["normRed"][index],
-            
+            "redundancy": reward_grouped.redundancy[index],
+            "normRed": reward_grouped.normalized_redundancy[index],
+
             # values to compare
-            "n_position": reward_config.n_inferred[index],
-            "k_position": reward_config.k_inferred[index],
-            "onlyClouds": reward_config.selected_clouds[index],
+            "n_position": reward_grouped.n_inferred[index],
+            "k_position": reward_grouped.k_inferred[index],
+            "onlyClouds": reward_grouped.selected_clouds[index],
             "batchQntClouds": data["len_elements"][index],
         }
 
@@ -263,17 +261,13 @@ def model_evaluation(
                 )
             )
 
-            print("\n\nDifferent values in rewardDict")
-            for key in rewardDict:
-                print("\n\tkey element: {}".format(key))
-                print("\t", rewardDict[key][index])
 
         print2word = False
         text["n"] = reward_config.n_inferred[index].item()
         text["k"] = reward_config.k_inferred[index].item()
-        text["redundancy"] = rewardDict["redundancy"][index]
+        text["redundancy"] = reward_grouped.redundancy[index]
         text["prn_ln"] = point["prn_ln"]
-        text["rn"] = rewardDict["normRed"][index]
+        text["rn"] = reward_grouped.normalized_redundancy[index]
         text["prAbs"] = point["pr_error"]
         text["deg_pr_ln"] = text["prErrorminimum"] / text["pr_ln"]
         if print2word:
@@ -295,7 +289,7 @@ def model_evaluation(
         if config.statistic:
             val_statistic["wo"].append(text["wo"])
             val_statistic["pr_ln"].append(point["pr_ln"])
-            val_statistic["redundancy"].append(rewardDict["normRed"][index])
+            val_statistic["redundancy"].append(reward_grouped.normalized_pr_error[index])
             val_statistic["won"].append(text["won"])
             val_statistic["prn_ln"].append(text["prn_ln"])
             val_statistic["rn"].append(text["rn"])

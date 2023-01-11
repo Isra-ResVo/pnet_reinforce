@@ -11,10 +11,10 @@ class Reward(BaseReward):
         super(Reward, self).__init__(reward_config=reward_config)
         self.reward_config = reward_config
 
-    def main(self, kwargs) -> torch.Tensor:
+    def main(self, kwargs) -> DataSolution:
 
         reward = {}
-        grouped_rewards = DataSolution()
+        grouped_rewards = DataSolution(reward_config=self.reward_config)
         epsilon = 1e-35
 
         # prError for model selections
@@ -70,9 +70,12 @@ class Reward(BaseReward):
         grouped_rewards.normalized_redundancy = normalized_redundancy
 
         # Ponderate
+        importance_of_objective_1 = self.config.wo[0]
+        importance_of_objective_2 = self.config.wo[1]
+
         ponderate_objetive = (
-            self.config.wo[0] * normalized_pr_error
-            + self.config.wo[1] * normalized_redundancy
+            importance_of_objective_1 * normalized_pr_error
+            + importance_of_objective_2 * normalized_redundancy
         )
         grouped_rewards.ponderate_objetive = ponderate_objetive
         # This ponderation was deactivate for not show improvent in the learnign
@@ -84,8 +87,7 @@ class Reward(BaseReward):
         reward["normRed"] = grouped_rewards.normalized_redundancy
         reward["ponderate"] = grouped_rewards.ponderate_objetive
 
-
-        return reward
+        return grouped_rewards
 
     def __redundancy(self):
         r"""

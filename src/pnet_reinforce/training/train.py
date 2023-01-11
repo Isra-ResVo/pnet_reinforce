@@ -58,16 +58,28 @@ def model_training(
         value_k=data["restricted_k"],
     )
     reward = Reward(reward_config=reward_config)
-    rewardDict = reward.main(data)
+    reward_grouped = reward.main(data)
 
-    reward_baseline = (rewardDict[config.key_reward] - critic_pred.reshape(-1)).detach()
+    condition = config.objective_to_optimize
+    if condition == 'probability_of_error':
+        objective = reward_grouped.probability_of_error
+    elif condition == 'normalized_pr_error':
+        objective = reward_grouped.normalized_pr_error
+    elif condition == 'redundancy':
+        objective = reward_grouped.redundancy
+    elif condition == 'normalized_redundancy':
+        objective = reward_grouped.normalized_redundancy
+    else:
+        objective = reward_grouped.ponderate_objetive
+
+    reward_baseline = (objective - critic_pred.reshape(-1)).detach()
 
     loss_1 = torch.mean(reward_baseline * log_probs)
     loss_1.backward()
     opt_pointer.step()
     opt_pointer.zero_grad()
 
-    loss_2 = MSEloss(critic_pred.reshape(-1), rewardDict[config.key_reward])
+    loss_2 = MSEloss(critic_pred.reshape(-1), objective)
     loss_2.backward()
     opt_critic.step()
     opt_critic.zero_grad()

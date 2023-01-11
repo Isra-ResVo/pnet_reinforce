@@ -59,7 +59,7 @@ train_arg.add_argument('--num_epoch', type=int, default= 10, help='number of epo
 train_arg.add_argument('--learning_rate', type=float, default=0.001, help='agent learning rate')
 train_arg.add_argument('--beta', type = float, default= 10, help= 'Penalization for constraints')
 train_arg.add_argument('--weight_decay', type = float, default = 0, help = 'Weight decay')
-train_arg.add_argument('--key_reward', type = str, default = 'ponderate',
+train_arg.add_argument('--objective_to_optimize', type = str, default = 'ponderate',
                         help = 'Key for dictReward at rewardclass only for training the implemented key are:\n \
                         \tprError : Error probability\n \
                         \tnormError : normalized probability error\n \
