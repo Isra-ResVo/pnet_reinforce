@@ -1,11 +1,7 @@
-import logging
-from abc import ABC, abstractmethod
-from reward.base import RewardConfig, BaseReward
-from reward.min_max import MaxMinError, MaxMinRedundancy
-
 import torch
 
-from reward.error_func import error_function, pr_error_bound
+from reward.base import RewardConfig, BaseReward
+from reward.min_max import MaxMinError, MaxMinRedundancy
 
 
 class Reward(BaseReward):
@@ -114,5 +110,3 @@ class Reward(BaseReward):
             )  # se castigan valores  soluciones no validas
 
         return torch.stack(rwd_time, dim=0)
-
-

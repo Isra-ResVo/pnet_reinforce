@@ -32,7 +32,7 @@ env_arg = add_argument_group('Environment')
 env_arg.add_argument('--version', type=str, default = "Version 1.12.1", help= 'Program version')
 env_arg.add_argument('--mode', type=str, default = 'k_n', help = 'modes: k_n, n, k') # this is applied to network
 
-env_arg.add_argument('--train_mode', type=str2bool, default= False, help='switch between training and testing')
+env_arg.add_argument('--train_mode', type=str2bool, default= True, help='switch between training and testing')
 env_arg.add_argument('--save_model', type=str2bool, default= False, help='whether or not model is loaded')
 env_arg.add_argument('--load_model', type=str2bool, default= False, help='whether or not model is retrieved')
 

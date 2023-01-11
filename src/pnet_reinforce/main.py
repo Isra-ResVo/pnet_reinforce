@@ -93,7 +93,7 @@ def main():
 
                 model_training(
                     pointer_net=pointer_net,
-                    cretic_net=critic_net,
+                    critic_net=critic_net,
                     opt_pointer=opt_pointer,
                     opt_critic=opt_critic,
                     MSEloss=MSEloss,
