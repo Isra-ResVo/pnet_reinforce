@@ -11,8 +11,6 @@ from utils.plotter_data_helper import pr_vals_2_plot
 from extras import plotting
 
 
-
-
 def model_evaluation(
     pointer_net,
     critic_net,
@@ -29,18 +27,15 @@ def model_evaluation(
     data_generator = Evalution_batches(config)
 
     if is_training:
-        data_object = data_generator.item_batch_evalution(
-            alternative_batchsize=1
-        )
+        data_object = data_generator.item_batch_evalution(alternative_batchsize=1)
 
     else:
-        
+
         print(
             "Replace element in memory: ",
             config.replace_element_in_memory,
         )
         data_object = data_generator.item_batch_evalution()
-
 
     data = {
         "len_elements": data_object.elements_length,
@@ -72,7 +67,13 @@ def model_evaluation(
     selections, log_probs = pointer_net(batch, data)
     batch_steps = data_object.batch.shape[2]
 
-    reward_config = RewardConfig(selections=selections, device=device, qnt_steps=batch_steps, config=config, value_k=data["restricted_k"])
+    reward_config = RewardConfig(
+        selections=selections,
+        device=device,
+        qnt_steps=batch_steps,
+        config=config,
+        value_k=data["restricted_k"],
+    )
     if config.mode == "k":
         reward = Reward(reward_config=reward_config)
     else:
@@ -100,9 +101,9 @@ def model_evaluation(
             "redundancy": rewardDict["redundancy"][index],
             "normRed": rewardDict["normRed"][index],
             # values to compare
-            "n_position": reward.n_inferred[index],
-            "k_position": reward.k_inferred[index],
-            "onlyClouds": reward.selected_clouds[index],
+            "n_position": reward_config.n_inferred[index],
+            "k_position": reward_config.k_inferred[index],
+            "onlyClouds": reward_config.selected_clouds[index],
             "batchQntClouds": data["len_elements"][index],
         }
 
@@ -254,8 +255,8 @@ def model_evaluation(
                 )
             )
             print("\n\nSelecton of tuple (k,n):")
-            print("\tn quantity: ", reward.n_inferred[index])
-            print("\tk quantity: ", reward.k_inferred[index])
+            print("\tn quantity: ", reward_config.n_inferred[index])
+            print("\tk quantity: ", reward_config.k_inferred[index])
             print(
                 "\t --->valor de comparacion (normRed+prError)/2: {}".format(
                     (point["normRed"] + point["value_error"]) / 2
@@ -268,8 +269,8 @@ def model_evaluation(
                 print("\t", rewardDict[key][index])
 
         print2word = False
-        text["n"] = reward.n_inferred[index].item()
-        text["k"] = reward.k_inferred[index].item()
+        text["n"] = reward_config.n_inferred[index].item()
+        text["k"] = reward_config.k_inferred[index].item()
         text["redundancy"] = rewardDict["redundancy"][index]
         text["prn_ln"] = point["prn_ln"]
         text["rn"] = rewardDict["normRed"][index]
@@ -301,7 +302,7 @@ def model_evaluation(
 
     if config.statistic:
         print("valores adquiridos para la tupla")
-        for i, (val_k, val_n) in enumerate(zip(reward.k_inferred, reward.n_inferred)):
+        for i, (val_k, val_n) in enumerate(zip(reward_config.k_inferred, reward_config.n_inferred)):
             print(
                 "Experimento no.{}, valor de la tupla({},{})".format(
                     i + 1, val_k, val_n
