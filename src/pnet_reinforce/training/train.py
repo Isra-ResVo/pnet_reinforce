@@ -2,6 +2,7 @@ import torch
 
 from generator.evaluation import Evalution_batches
 from extras import extraElements
+
 # from actor.actor import Reward
 from reward.reward import Reward, RewardConfig
 
@@ -48,6 +49,7 @@ def model_training(
         batch, data
     )  # warning Revisar los elementos para evitar los elementos extra
 
+    # Reward
     reward_config = RewardConfig(
         selections=selections,
         device=device,
@@ -55,15 +57,9 @@ def model_training(
         config=config,
         value_k=data["restricted_k"],
     )
-
-    # Reward
-    if config.mode == "k":
-        reward = Reward(reward_config=reward_config)
-    else:
-        reward = Reward(reward_config=reward_config)
-
+    reward = Reward(reward_config=reward_config)
     rewardDict = reward.main(data)
-    
+
     reward_baseline = (rewardDict[config.key_reward] - critic_pred.reshape(-1)).detach()
 
     loss_1 = torch.mean(reward_baseline * log_probs)
