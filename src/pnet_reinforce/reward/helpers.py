@@ -1,12 +1,13 @@
 import torch
 from reward.base import BaseReward, RewardConfig
+from generator.data_interface.data import DataRepresentation
 
 
 class HelperPlottingPoints(BaseReward):
     def __init__(self, reward_config: RewardConfig):
         super(HelperPlottingPoints, self).__init__(reward_config)
 
-    def redundancyValsPlot(self, point, config, kwargs, index):
+    def redundancyValsPlot(self, point, config, data_object: DataRepresentation, index):
         # This funtion is for creating the values for plotting
 
         # agreagar index and kwargs
@@ -15,7 +16,7 @@ class HelperPlottingPoints(BaseReward):
 
         if mode == "k_n":
             if config.variable_length:
-                n = kwargs["len_elements"][index]
+                n = data_object.elements_length[index]
             else:
                 n = point["batchQntClouds"]
 
@@ -29,7 +30,7 @@ class HelperPlottingPoints(BaseReward):
 
         elif mode == "k":
             if config.variable_length:
-                n = kwargs["len_elements"][index]
+                n = data_object.elements_length[index]
             else:
                 n = point["batchQntClouds"]
 

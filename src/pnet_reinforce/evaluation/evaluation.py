@@ -39,14 +39,14 @@ def model_evaluation(
         )
         data_object = data_generator.item_batch_evalution()
 
-    data = {
-        "len_elements": data_object.elements_length,
-        "batch": data_object.batch,
-        "indices": data_object.indices,
-        "batchNormal": data_object.batch_normalized,
-        "restricted_n": data_object.restricted_n,
-        "restricted_k": data_object.restricted_k,
-    }
+    # data = {
+    #     "len_elements": data_object.elements_length,
+    #     "batch": data_object.batch,
+    #     "indices": data_object.indices,
+    #     "batchNormal": data_object.batch_normalized,
+    #     "restricted_n": data_object.restricted_n,
+    #     "restricted_k": data_object.restricted_k,
+    # }
 
     pointer_net.eval()
     critic_net.eval()
@@ -66,7 +66,7 @@ def model_evaluation(
         batch = data_object.batch
 
     # Inference
-    selections, log_probs = pointer_net(batch, data)
+    selections, log_probs = pointer_net(batch, data_object)
     batch_steps = data_object.batch.shape[2]
 
     reward_config = RewardConfig(
@@ -77,7 +77,7 @@ def model_evaluation(
         value_k=data_object.restricted_k,
     )
     reward = Reward(reward_config=reward_config)
-    reward_grouped = reward.main(data)
+    reward_grouped = reward.main(data_object=data_object)
 
     val_statistic = {
         "pr_ln": [],
@@ -92,16 +92,15 @@ def model_evaluation(
 
         # Dict with values of first element of inference and print it in plot to see model performance
         point = {
-            "value_error":  reward_grouped.probability_of_error[index],
+            "value_error": reward_grouped.probability_of_error[index],
             "prError1": 0,
             "redundancy": reward_grouped.redundancy[index],
             "normRed": reward_grouped.normalized_redundancy[index],
-
             # values to compare
             "n_position": reward_grouped.n_inferred[index],
             "k_position": reward_grouped.k_inferred[index],
             "onlyClouds": reward_grouped.selected_clouds[index],
-            "batchQntClouds":  data_object.elements_length[index],
+            "batchQntClouds": data_object.elements_length[index],
         }
 
         # Elements to populate for plotting reasons
@@ -124,7 +123,14 @@ def model_evaluation(
                 degPr,
                 minimum,
                 maximum,
-            ) = pr_vals_2_plot(toCompareInPlot, data, point, config, device, index)
+            ) = pr_vals_2_plot(
+                toCompareInPlot=toCompareInPlot,
+                data_object=data_object,
+                point=point,
+                config=config,
+                device=device,
+                idxEle=index,
+            )
             text["pr_error"] = point["pr_error"]  # antes point['prAbs']
             text["pr_ln"] = point["pr_ln"]  # antes point['prLog']
             text["prErrorminimum"] = minimum
@@ -175,7 +181,7 @@ def model_evaluation(
                 minimum,
                 maximum,
             ) = helper_data_redundancy.redundancyValsPlot(
-                point=point, config=config, kwargs=data, index=index
+                point=point, config=config, data_object=data_object, index=index
             )
             text["redundancymax"] = maximum
             text["redundancymin"] = minimum
@@ -261,7 +267,6 @@ def model_evaluation(
                 )
             )
 
-
         print2word = False
         text["n"] = reward_config.n_inferred[index].item()
         text["k"] = reward_config.k_inferred[index].item()
@@ -289,7 +294,9 @@ def model_evaluation(
         if config.statistic:
             val_statistic["wo"].append(text["wo"])
             val_statistic["pr_ln"].append(point["pr_ln"])
-            val_statistic["redundancy"].append(reward_grouped.normalized_pr_error[index])
+            val_statistic["redundancy"].append(
+                reward_grouped.normalized_pr_error[index]
+            )
             val_statistic["won"].append(text["won"])
             val_statistic["prn_ln"].append(text["prn_ln"])
             val_statistic["rn"].append(text["rn"])

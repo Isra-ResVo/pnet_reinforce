@@ -1,9 +1,8 @@
 import torch
 from torch.nn import functional as F
 import torch.nn as nn
-import numpy as np
-import logging
 
+from generator.data_interface.data import DataRepresentation
 
 class Critic(nn.Module):
     def __init__(self, config, device):
@@ -61,7 +60,7 @@ class Critic(nn.Module):
         self.attention_Wq = nn.Paramer(self.attention_Wq)
         """
 
-    def forward(self, x, kwargs):
+    def forward(self, x, data_object: DataRepresentation):
 
         encoder_output, encoder_states = self.embedding(x)
 
@@ -73,7 +72,7 @@ class Critic(nn.Module):
             .reshape(batch_size, self.num_neurons * 2, 1)
         )  # (1,batch, hidden_dim) to (batch, hidden_dim, 1)
 
-        first_entry = self.first_entry(batch_size, kwargs)
+        first_entry = self.first_entry(batch_size, data_object)
         encoder_output = torch.cat((first_entry, encoder_output), dim=0)
 
         # (steps, batch, hidden_dim) to (batch, hidden_dim, steps)
@@ -93,7 +92,7 @@ class Critic(nn.Module):
 
         return linear
 
-    def first_entry(self=None, batchSize=None, kwargs=None):
+    def first_entry(self, batchSize, data_object:DataRepresentation):
 
         # Fist entry with  static values
         first_element = (
@@ -104,9 +103,9 @@ class Critic(nn.Module):
 
         if self.mode == "n" or self.mode == "k":
             if self.mode == "n":
-                restricted_data = kwargs["restricted_n"]
+                restricted_data = data_object.restricted_n
             elif self.mode == "k":
-                restricted_data = kwargs["restricted_k"]
+                restricted_data = data_object.restricted_k
 
             first_element[:, 1] = 1 / restricted_data
 

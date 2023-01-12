@@ -6,6 +6,7 @@ import numpy as np
 import logging
 
 from pointer.mask import pointer_mask, mask_n, mask_k
+from generator.data_interface.data import DataRepresentation
 
 
 class Pointer(nn.Module):
@@ -88,7 +89,7 @@ class Pointer(nn.Module):
             torch.rand(size=(self.hidden_dim * 2,), dtype=torch.float32)
         )
 
-    def forward(self, encoder_output, encoder_states, kwargs):
+    def forward(self, encoder_output, encoder_states, data_object: DataRepresentation):
 
         r"""
         Encoder_output: [steps, batch, hidden_dim*directions]
@@ -115,7 +116,7 @@ class Pointer(nn.Module):
         dec_s = encoder_states
 
         # First input in the decoder phase
-        dec_ipt = self.first_entry(self.batch_size, kwargs).detach()
+        dec_ipt = self.first_entry(self.batch_size, data_object).detach()
 
         # Masking tensor to avoid select again elements previously
         # selected
@@ -123,7 +124,7 @@ class Pointer(nn.Module):
             size=(self.batch_size, self.steps_qnt), device=self.device
         )
         if self.config.variable_length:
-            for i, len_element in enumerate(kwargs["len_elements"]):
+            for i, len_element in enumerate(data_object.elements_length):
                 if self.config.mode == "k":
                     # elements extra(padding) are set to 1 for be non selectionables
                     self.mask[i, len_element:-1] = 1
@@ -143,7 +144,7 @@ class Pointer(nn.Module):
 
         # Decodification cicle
         for step in range(totalIter):
-            dec_ipt, dec_s = self.__decode_loop(dec_ipt, dec_s, step, kwargs)
+            dec_ipt, dec_s = self.__decode_loop(dec_ipt, dec_s, step, data_object=data_object)
 
         # Secuences ordered in files [batch,secuence]
         self.selections = torch.stack(self.selections, dim=1)  # [batch,steps_secuence]
@@ -156,63 +157,14 @@ class Pointer(nn.Module):
 
         return self.selections, self.log_probs  # lo demás luego lo verifico
 
-    def first_entry(
-        self=None, batch_size=None, kwargs=None
-    ) -> torch.Tensor:  # warning cambie el valor aque era sel_nn
-        r"""
-        For the first element in the batch, in TSP (travelling salesman problem)
-        usually uses any city because it's  interpreted as a circular permutation,
-        but in this problem is not the case, for that reason, it's used a synthetic
-        first element to begin with the permuation.
-
-        Taking adventage  in  config.mode == 'n'(and config.mode = k),  we know
-        previously the qnt of elements to choose and using that information for
-        generating the first element. In the case of  config.mode == 'k_n' is
-        different, and only is used a synthetic element without additional information.
-
-        This can be changed to another kind entry like the entry of another network
-        where the entrace is all the secuence. In this case with this entry works fine
-        but with bigger secuences this can be a game changer
-
-        **Note**: The first entry is hard coded and can be changed to be adapted to
-        the new batch shape. Specially talking in the 2nd dimention shape.
-        """
-        # Vector [1.1, 1.4] is totally  by convenience
-        first_entry = torch.tensor(
-            [1.1, 1.4], dtype=torch.float32, device=self.device
-        ).repeat(batch_size, 1)
-        # dims (batch_len, 2)
-
-        # if self.mode == 'n':
-        #     key = 'restricted_n'
-        # elif self.mode == 'k':
-        #     key = 'restricted_k'
-
-        # self.log.info('dimenciones de los batch, first entry shape%s , restriction_data %s', str(first_entry.shape), str(kwargs[key]))
-
-        if self.mode == "n" or self.mode == "k":
-
-            if self.mode == "n":
-                restriction_data = kwargs["restricted_n"]
-            elif self.mode == "k":
-                restriction_data = kwargs["restricted_k"]
-
-            first_entry[:, 1] = 1 / restriction_data
-
-        first_entry = self.linear_first_entry(
-            first_entry.type(torch.float32)
-        ).unsqueeze(dim=0)
-        first_entry = torch.tanh(first_entry)  # cuidado
-        return first_entry
-
-    def __decode_loop(self, decoder_loop_input, decoder_loop_state, step, kwargs):
+    def __decode_loop(self, decoder_loop_input, decoder_loop_state, step, data_object: DataRepresentation):
 
         # Run the cell on a combination of the previous input and state
         output, state = self.lstm_decoder(decoder_loop_input, decoder_loop_state)
 
         # Pointer mechanism to genrate the probs of every selection
         vector_pointer = self.__pointer_mechanism(
-            self.encoder_output, output, step, kwargs
+            self.encoder_output, output, step, data_object=data_object
         )  # sel_n in forward
 
         # Multinomial distribution
@@ -254,7 +206,7 @@ class Pointer(nn.Module):
 
         return new_decoder_input, state
 
-    def __pointer_mechanism(self, ref_g, q_g, step, kwargs):
+    def __pointer_mechanism(self, ref_g, q_g, step, data_object: DataRepresentation):
         r"""
         Wref_g,W_q \in R^d*d  and u_vector = ref \in R^d
 
@@ -297,7 +249,7 @@ class Pointer(nn.Module):
         #   Mask values to not repeat values
         mask_union = self.mode_mask[self.mode](
             step=step,
-            kwargs=kwargs,
+            data_object=data_object,
             main_mask=self.mask,
             main_selection=self.selections,
             steps_qnt=self.steps_qnt,
@@ -349,3 +301,52 @@ class Pointer(nn.Module):
         )
 
         return vector_u_pointer
+
+    def first_entry(
+        self, batch_size, data_object: DataRepresentation, 
+    ) -> torch.Tensor:  # warning cambie el valor aque era sel_nn
+        r"""
+        For the first element in the batch, in TSP (travelling salesman problem)
+        usually uses any city because it's  interpreted as a circular permutation,
+        but in this problem is not the case, for that reason, it's used a synthetic
+        first element to begin with the permuation.
+
+        Taking adventage  in  config.mode == 'n'(and config.mode = k),  we know
+        previously the qnt of elements to choose and using that information for
+        generating the first element. In the case of  config.mode == 'k_n' is
+        different, and only is used a synthetic element without additional information.
+
+        This can be changed to another kind entry like the entry of another network
+        where the entrace is all the secuence. In this case with this entry works fine
+        but with bigger secuences this can be a game changer
+
+        **Note**: The first entry is hard coded and can be changed to be adapted to
+        the new batch shape. Specially talking in the 2nd dimention shape.
+        """
+        # Vector [1.1, 1.4] is totally  by convenience
+        first_entry = torch.tensor(
+            [1.1, 1.4], dtype=torch.float32, device=self.device
+        ).repeat(batch_size, 1)
+        # dims (batch_len, 2)
+
+        # if self.mode == 'n':
+        #     key = 'restricted_n'
+        # elif self.mode == 'k':
+        #     key = 'restricted_k'
+
+        # self.log.info('dimenciones de los batch, first entry shape%s , restriction_data %s', str(first_entry.shape), str(kwargs[key]))
+
+        if self.mode == "n" or self.mode == "k":
+
+            if self.mode == "n":
+                restriction_data = data_object.restricted_n
+            elif self.mode == "k":
+                restriction_data = data_object.restricted_k
+
+            first_entry[:, 1] = 1 / restriction_data
+
+        first_entry = self.linear_first_entry(
+            first_entry.type(torch.float32)
+        ).unsqueeze(dim=0)
+        first_entry = torch.tanh(first_entry)  # cuidado
+        return first_entry

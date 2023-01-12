@@ -2,11 +2,11 @@ import torch
 from torch import nn
 import itertools
 import logging
-from scipy.special import factorial
 
 # ---------- local modules ------------
 from pointer.pointer import Pointer
 from actor.embedding import Embedding
+from generator.data_interface.data import BaseDataStructure
 
 # this function was disable by ask of the dr
 # from batchGenerator import optimisticPessimistic 
@@ -47,7 +47,7 @@ class Actor(nn.Module):
             in_features=4, out_features=self.num_neurons * 2, bias=True
         )
 
-    def forward(self=None, x=None, kwargs=None):
+    def forward(self, x, data_object:BaseDataStructure):
         # x(batch), dims = [batch_len, dimention, clouds_qnt]
         self.batch_qnt = x.shape[0]
         self.parameters = x.shape[1]
@@ -68,7 +68,7 @@ class Actor(nn.Module):
 
         # Decoder part
         selections, log_probs = self.decoder_pointer(
-            encoder_output, encoder_states, kwargs
+            encoder_output, encoder_states, data_object
         )
 
         return selections, log_probs

@@ -1,18 +1,19 @@
 import torch
 from reward.error_func import pr_error_bound
+from generator.data_interface.data import DataRepresentation
 
 selected_error_formula = pr_error_bound
 
 
-def pr_vals_2_plot(toCompareInPlot, kwargs, point, config, device, idxEle=0):
+def pr_vals_2_plot(toCompareInPlot, data_object: DataRepresentation, point, config, device, idxEle=0):
     # agregar config
     # All this only works for one element!
     local_error_formula = selected_error_formula
     mode = config.mode
     log = config.log
 
-    batch = kwargs["batch"]
-    indixes = kwargs["indices"]
+    batch = data_object.batch
+    indixes = data_object.indices
     buffer = []
     bestWorst = [False, True]
 
@@ -23,7 +24,7 @@ def pr_vals_2_plot(toCompareInPlot, kwargs, point, config, device, idxEle=0):
         for boolean in bestWorst:
             buffer.append(
                 all_combinations(
-                    batch, config, idxEle, kwargs, device=device, largest=boolean
+                    batch, config, idxEle, data_object=data_object, device=device, largest=boolean
                 )
             )
 
@@ -43,7 +44,7 @@ def pr_vals_2_plot(toCompareInPlot, kwargs, point, config, device, idxEle=0):
         onlyCloudsBatch = []
         for boolean in bestWorst:
             if config.variable_length:
-                len_element = kwargs["len_elements"][idxEle]
+                len_element =  data_object.elements_length[idxEle]
                 onlyCloudsBatch.append(
                     torch.topk(batch[idxEle, 0, :len_element], k=n, largest=boolean)[
                         1
@@ -63,8 +64,8 @@ def pr_vals_2_plot(toCompareInPlot, kwargs, point, config, device, idxEle=0):
         selections = point["onlyClouds"]
 
         if config.variable_length:
-            qnt_clouds = kwargs["len_elements"][idxEle]
-            len_element = kwargs["len_element"][idxEle]
+            qnt_clouds = data_object.elements_length[idxEle]
+            len_element = data_object.elements_length[idxEle]
         else:
             qnt_clouds = batch.shape[2]
 
@@ -147,7 +148,7 @@ def pr_vals_2_plot(toCompareInPlot, kwargs, point, config, device, idxEle=0):
 
 
 def all_combinations(
-    batch, config, idx_batch=0, kwargs=None, device="cpu", largest=False
+    batch, config, idx_batch=0, data_object:DataRepresentation=None, device="cpu", largest=False
 ) -> torch.tensor:
     r"""
     All the combinations for k and n, with all the providers taken in the batch, for instance:
@@ -163,7 +164,7 @@ def all_combinations(
     local_error_formula = selected_error_formula
     # agregar config and kwargs
     if config.variable_length:
-        len_element = kwargs["len_elements"][idx_batch]
+        len_element = data_object.elements_length[idx_batch]
         cloud_qnts = torch.arange(start=2, end=len_element + 1, device=device)
 
     else:
@@ -184,7 +185,7 @@ def all_combinations(
 
         # Best k elements
         if config.variable_length:
-            len_element = kwargs["len_elements"][idx_batch]
+            len_element = data_object.elements_length[idx_batch]
             _, index = torch.topk(
                 input=batch[idx_batch, 0, :len_element],
                 k=cloud_element,

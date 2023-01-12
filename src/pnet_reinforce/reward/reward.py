@@ -3,6 +3,7 @@ import torch
 from reward.base import RewardConfig, BaseReward
 from reward.min_max import MaxMinError, MaxMinRedundancy
 from reward.reward_representation import DataSolution
+from generator.data_interface.data import DataRepresentation
 
 
 class Reward(BaseReward):
@@ -11,7 +12,7 @@ class Reward(BaseReward):
         super(Reward, self).__init__(reward_config=reward_config)
         self.reward_config = reward_config
 
-    def main(self, kwargs) -> DataSolution:
+    def main(self, data_object:DataRepresentation) -> DataSolution:
 
         reward = {}
         grouped_rewards = DataSolution(reward_config=self.reward_config)
@@ -22,7 +23,7 @@ class Reward(BaseReward):
             self.n_inferred - self.k_inferred
         ) + 1  #  subset size to have to fail before +2
         probability_of_error = self.error_formula(
-            batch=kwargs["batch"],
+            batch=data_object.batch,
             subsets=size_subsets,
             only_clouds=self.selected_clouds,
         )
@@ -31,7 +32,7 @@ class Reward(BaseReward):
 
         # min and max for normalization process
         max_min_prbobality_of_error = MaxMinError(reward_config=self.reward_config)
-        maximum, minimum = max_min_prbobality_of_error.min_max_error(kwargs=kwargs)
+        maximum, minimum = max_min_prbobality_of_error.min_max_error(data_object=data_object)
 
         # print("probabilidad de error", pr_error)
         # print("maximum", maximum)
@@ -63,7 +64,7 @@ class Reward(BaseReward):
             reward_config=self.reward_config
         )
         maximum, minimum = max_min_redundancy_of_service.max_min_redundancy(
-            len_elements=kwargs["len_elements"]
+            len_elements=data_object.elements_length
         )
 
         normalized_redundancy = (redundancy - minimum) / (maximum - minimum + epsilon)
@@ -81,11 +82,6 @@ class Reward(BaseReward):
         # This ponderation was deactivate for not show improvent in the learnign
         # reward['ponderate'] = 10/(1-torch.log(reward['ponderate'])) # realizar cambios d
 
-        reward["prError"] = grouped_rewards.probability_of_error
-        reward["normError"] = grouped_rewards.normalized_pr_error
-        reward["redundancy"] = grouped_rewards.redundancy
-        reward["normRed"] = grouped_rewards.normalized_redundancy
-        reward["ponderate"] = grouped_rewards.ponderate_objetive
 
         return grouped_rewards
 

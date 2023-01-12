@@ -1,5 +1,6 @@
 import torch
 from reward.base import BaseReward, RewardConfig
+from generator.data_interface.data import DataRepresentation
 
 class MaxMinRedundancy(BaseReward):
     def __init__(self, reward_config: RewardConfig):
@@ -118,7 +119,7 @@ class MaxMinError(BaseReward):
             )
         return indices
 
-    def min_max_error(self, kwargs) -> torch.Tensor:
+    def min_max_error(self, data_object:DataRepresentation) -> torch.Tensor:
 
         r"""
         To calculate in the case when n y k is choosen for the system
@@ -128,7 +129,7 @@ class MaxMinError(BaseReward):
         Important subsets = n-k+1
 
         """
-        batch = kwargs["batch"]
+        batch = data_object.batch
         siz, par, qnt = batch.shape
         # warning cambiar n_inferred a algo como variable de apoyo, ya que bien puede tomar los valores de k o n
         # segun la configuracion que se tiene.
@@ -138,8 +139,8 @@ class MaxMinError(BaseReward):
         indices = []
         if self.config.mode == "k_n":  # warning
 
-            if self.config.variable_length and "len_elements" in kwargs:
-                for len_n_instance in kwargs["len_elements"]:
+            if self.config.variable_length and data_object.elements_length:
+                for len_n_instance in data_object.elements_length:
                     indices.append(
                         torch.arange(
                             0, len_n_instance, dtype=torch.int64, device=self.device
@@ -152,28 +153,28 @@ class MaxMinError(BaseReward):
 
             subsets = torch.ones(size=(siz,), dtype=torch.int64, device=self.device)
 
-        elif self.config.mode == "n" and "restricted_n" in kwargs:
-            if self.config.variable_length and "len_elements" in kwargs:
+        elif self.config.mode == "n" and data_object.restricted_n:
+            if self.config.variable_length and data_object.elements_length:
                 indices = self.__indices_variable_length_and_restriction(
-                    kwargs["restricted_n"], kwargs["len_elements"], batch, True
+                    data_object.restricted_n, data_object.elements_length, batch, True
                 )
 
             else:
-                for n, batchEle in zip(kwargs["restricted_n"], batch):
+                for n, batchEle in zip(data_object.restricted_n, batch):
                     # Taking indices of k elements with lower values
                     indices.append(torch.topk(batchEle[0], k=n, largest=True)[1])
 
             subsets = torch.ones(size=(siz,), dtype=torch.int64, device=self.device)
 
-        elif self.config.mode == "k" and "restricted_k" in kwargs:
+        elif self.config.mode == "k" and data_object.restricted_k:
             # In this option is special, only when k = n it's the higher value of pr_error and, the lowers when
             #   n>k we have more conbinations and consecuently a lower pr_error
             if self.config.variable_length:
                 indices = self.__indices_variable_length_and_restriction(
-                    kwargs["restricted_k"], kwargs["len_elements"], batch, True
+                    data_object.restricted_k , data_object.elements_length, batch, True
                 )
             else:
-                for k, batchEle in zip(kwargs["restricted_k"], batch):
+                for k, batchEle in zip( data_object.restricted_k, batch):
                     indices.append(torch.topk(batchEle[0], k=k, largest=True)[1])
 
             subsets = torch.ones(size=(siz,), dtype=torch.int64, device=self.device)
@@ -192,13 +193,13 @@ class MaxMinError(BaseReward):
         if self.config.mode == "k_n":
             indices = []
             if self.config.variable_length:
-                for len_n_instance in kwargs["len_elements"]:
+                for len_n_instance in data_object.elements_length:
                     indices.append(
                         torch.arange(
                             0, len_n_instance, dtype=torch.int64, device=self.device
                         )
                     )
-                subsets = [i - 1 for i in kwargs["len_elements"]]
+                subsets = [i - 1 for i in data_object.elements_length]
                 subsets = torch.tensor(subsets, dtype=torch.int64, device=self.device)
             else:
                 val = qnt
@@ -209,35 +210,35 @@ class MaxMinError(BaseReward):
                     torch.ones(size=(siz,), dtype=torch.int64, device=self.device) * val
                 ) - 1
 
-        elif self.config.mode == "n" and "restricted_n" in kwargs:
-            if self.config.variable_length and "len_elements" in kwargs:
+        elif self.config.mode == "n" and data_object.restricted_n:
+            if self.config.variable_length and data_object.elements_length:
                 indices = self.__indices_variable_length_and_restriction(
-                    kwargs["restricted_n"], kwargs["len_elements"], batch, False
+                    data_object.restricted_n, data_object.elements_length, batch, False
                 )
-                subsets = [i - 1 for i in kwargs["len_elements"]]
+                subsets = [i - 1 for i in data_object.elements_length]
 
             else:
-                val = kwargs["restricted_n"]
-                for n, batchEle in zip(kwargs["restricted_n"], batch):
+                val = data_object.restricted_n
+                for n, batchEle in zip(data_object.restricted_n, batch):
                     # Taking indices of k elements with lowest values
                     indices.append(torch.topk(batchEle[0], k=n, largest=False)[1])
                 subsets = (
                     torch.ones(size=(siz,), dtype=torch.int64, device=self.device) * val
                 ) - 1
 
-        elif self.config.mode == "k" and "restricted_k" in kwargs:
+        elif self.config.mode == "k" and data_object.restricted_k:
 
             if self.config.variable_length:
                 indices = self.__indices_variable_length_and_restriction(
-                    kwargs["len_elements"], kwargs["len_elements"], batch, False
+                    data_object.elements_length, data_object.elements_length, batch, False
                 )
                 subsets = [
                     i - j + 1
-                    for i, j in zip(kwargs["len_elements"], kwargs["restricted_k"])
+                    for i, j in zip(data_object.elements_length, data_object.restricted_k)
                 ]
             else:
                 # To get the lowest pr_error is necesarary take all clouds in the batch
-                restricted_k = kwargs["restricted_k"]
+                restricted_k = data_object.restricted_k
                 indices = torch.arange(
                     0, qnt, dtype=torch.int64, device=self.device
                 ).repeat(siz, 1)

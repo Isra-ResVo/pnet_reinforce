@@ -2,7 +2,7 @@ import torch
 
 
 def pointer_mask(
-    step, kwargs, main_mask, main_selection, steps_qnt, device
+    step, data_object, main_mask, main_selection, steps_qnt, device
 ) -> torch.Tensor:
     r"""
     This mask and the others modify the state of the amin mask to avoid choose
