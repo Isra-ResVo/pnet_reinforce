@@ -143,7 +143,7 @@ class Pointer(nn.Module):
 
         # Decodification cicle
         for step in range(totalIter):
-            dec_ipt, dec_s = self.decode_loop(dec_ipt, dec_s, step, kwargs)
+            dec_ipt, dec_s = self.__decode_loop(dec_ipt, dec_s, step, kwargs)
 
         # Secuences ordered in files [batch,secuence]
         self.selections = torch.stack(self.selections, dim=1)  # [batch,steps_secuence]
@@ -205,13 +205,13 @@ class Pointer(nn.Module):
         first_entry = torch.tanh(first_entry)  # cuidado
         return first_entry
 
-    def decode_loop(self, decoder_loop_input, decoder_loop_state, step, kwargs):
+    def __decode_loop(self, decoder_loop_input, decoder_loop_state, step, kwargs):
 
         # Run the cell on a combination of the previous input and state
         output, state = self.lstm_decoder(decoder_loop_input, decoder_loop_state)
 
         # Pointer mechanism to genrate the probs of every selection
-        vector_pointer = self.pointer_mechanism(
+        vector_pointer = self.__pointer_mechanism(
             self.encoder_output, output, step, kwargs
         )  # sel_n in forward
 
@@ -254,7 +254,7 @@ class Pointer(nn.Module):
 
         return new_decoder_input, state
 
-    def pointer_mechanism(self, ref_g, q_g, step, kwargs):
+    def __pointer_mechanism(self, ref_g, q_g, step, kwargs):
         r"""
         Wref_g,W_q \in R^d*d  and u_vector = ref \in R^d
 
