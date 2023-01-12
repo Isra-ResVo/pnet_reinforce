@@ -5,7 +5,7 @@ import logging
 from scipy.special import factorial
 
 # ---------- local modules ------------
-from pointer import Pointer
+from pointer.pointer import Pointer
 from actor.embedding import Embedding
 
 # this function was disable by ask of the dr
