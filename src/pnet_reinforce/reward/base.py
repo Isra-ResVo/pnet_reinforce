@@ -89,3 +89,4 @@ class BaseReward(ABC):
         self.error_formula = pr_error_bound
 
         self.config = reward_config.config
+        self.reward_config = reward_config
