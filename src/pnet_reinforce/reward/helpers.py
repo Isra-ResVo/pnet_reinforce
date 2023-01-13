@@ -8,66 +8,83 @@ class HelperPlottingPoints(BaseReward):
     def __init__(self, reward_config: RewardConfig):
         super(HelperPlottingPoints, self).__init__(reward_config)
 
-    def redundancyValsPlot(self, point:Point, config, data_object: DataRepresentation, index):
+    def redundancyValsPlot(
+        self, point: Point, config, data_object: DataRepresentation, index
+    ):
         # This funtion is for creating the values for plotting
 
         # agreagar index and kwargs
         mode = config.mode
-        redundancy = []
+        redundancy_all_values_of_element_batch = []
 
         if mode == "k_n":
             if config.variable_length:
                 n = data_object.elements_length[index]
             else:
-                n = point["batchQntClouds"]
+                n = point.elements_length
 
             limitKeys = ((n) * (n - 1)) / 2
             iterable = self.redundancy_values
 
         elif mode == "n":
 
-            n = point["n_position"]
+            n = point.n_inferred
             iterable = [str(i) + str(n.item()) for i in range(2, n + 1)]
 
         elif mode == "k":
             if config.variable_length:
                 n = data_object.elements_length[index]
             else:
-                n = point["batchQntClouds"]
+                n = point.elements_length
 
-            k = point["k_position"]
+            k = point.k_inferred
             iterable = [str(k.item()) + str(i) for i in range(k, n + 1)]
 
+        # Just go thorugh all the dict and get the minimum and maximum
         for i, key in enumerate(iterable):
             val = self.redundancy_values[key]
-            redundancy.append(val)
+            redundancy_all_values_of_element_batch.append(val)
 
             if i == 0:
-                minimum = val
-                maximum = val
+                redundancy_minimum = val
+                redundancy_maximum = val
 
             else:
-                if minimum > val:
-                    minimum = val
-                if maximum < val:
-                    maximum = val
+                if redundancy_minimum > val:
+                    redundancy_minimum = val
+                if redundancy_maximum < val:
+                    redundancy_maximum = val
 
             if mode == "k_n":
                 if i == limitKeys - 1:
                     break
 
-        redundancy = torch.tensor(redundancy, dtype=torch.float32)
-        redundancy_original = redundancy
+        redundancy_all_values_of_element_batch = torch.tensor(
+            redundancy_all_values_of_element_batch, dtype=torch.float32
+        )
+        wildcard_var = redundancy_all_values_of_element_batch
 
         logredundancy = False
         if logredundancy:
 
-            redundancy = torch.log(redundancy)
-            maximum = torch.log(torch.tensor(maximum, dtype=torch.float32))
-            minimum = torch.log(torch.tensor(minimum, dtype=torch.float32))
+            wildcard_var = torch.log(wildcard_var)
+            redundancy_maximum = torch.log(
+                torch.tensor(redundancy_maximum, dtype=torch.float32)
+            )
+            redundancy_minimum = torch.log(
+                torch.tensor(redundancy_minimum, dtype=torch.float32)
+            )
 
         epsilon = 1e-35
-        redundancy = (redundancy - minimum) / (maximum - minimum + epsilon)
-        ratio = point["redundancy"] / minimum
+        redundancy_all_values_of_element_batch_normalized = (
+            wildcard_var - redundancy_minimum
+        ) / (redundancy_maximum - redundancy_minimum + epsilon)
+        redundancy_degradation_wrt_minimum = point.redundancy / redundancy_minimum
 
-        return redundancy, redundancy_original, ratio, minimum, maximum
+        return (
+            redundancy_all_values_of_element_batch_normalized,
+            redundancy_all_values_of_element_batch,
+            redundancy_degradation_wrt_minimum,
+            redundancy_minimum,
+            redundancy_maximum,
+        )

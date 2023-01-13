@@ -153,7 +153,7 @@ def extend_information(
                 minimum,
                 maximum,
             ) = helper_data_redundancy.redundancyValsPlot(
-                point=point, config=config, data_object=data_object, index=index
+                point=point_object, config=config, data_object=data_object, index=index
             )
             text["redundancymax"] = maximum
             text["redundancymin"] = minimum
