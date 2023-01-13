@@ -35,8 +35,9 @@ class Point(object):
         self.k_inferred = reward_grouped.k_inferred[index]
         self.selected_clouds = reward_grouped.selected_clouds[index]
         self.elements_length = data_object.elements_length[index]
-
-        # This are provided with PointRefereces tool.
+        
+        # Probability of error referential  vals
+        #   This are provided with PointRefereces tool.
         self.probability_of_error_no_log = None #"pr_ln"
         self.probability_of_error_normalized = None  # "prn_ln"
         self.probability_of_error_no_log_normalized = None  # "prn"
@@ -44,10 +45,22 @@ class Point(object):
         self.minimum_value_in_batch_element = None
         self.degradation_wrt_minimum = None
 
-        # Multiple points
+        #   Multiple points 
         self.all_element_batch_error_probabilities = None
         self.all_element_batch_error_probabilities_normalized = None
         self.all_element_batch_error_probabilities_no_log = None
+
+        # Redundancy values referencial values
+        
+        self.redundancy_all_values_of_element_batch_normalized = None
+        self.redundancy_all_values_of_element_batch = None
+        self.redundancy_degradation_wrt_minimum = None
+        self.redundancy_minimum = None
+        self.redundancy_maximum = None
+
+
+        # weighted point
+        self.weighted_objective = None
 
 
 
