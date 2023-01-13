@@ -1,13 +1,14 @@
 import torch
 from reward.base import BaseReward, RewardConfig
 from generator.data_interface.data import DataRepresentation
+from evaluation.data_point import Point
 
 
 class HelperPlottingPoints(BaseReward):
     def __init__(self, reward_config: RewardConfig):
         super(HelperPlottingPoints, self).__init__(reward_config)
 
-    def redundancyValsPlot(self, point, config, data_object: DataRepresentation, index):
+    def redundancyValsPlot(self, point:Point, config, data_object: DataRepresentation, index):
         # This funtion is for creating the values for plotting
 
         # agreagar index and kwargs

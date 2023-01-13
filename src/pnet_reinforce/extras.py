@@ -5,6 +5,8 @@ import sys
 import os
 import logging
 
+from evaluation.data_point import Point
+
 
 def extraElements(batchShape, device, norm, oneElement=False) -> torch.Tensor:
 
@@ -58,7 +60,7 @@ def normalization(batch: torch.Tensor, device: str = "cpu") -> torch.Tensor:
 
 
 # labels for plotting
-def labelsFunc(point, mode):
+def labelsFunc(point: Point, mode):
     r"""
 
     This fucntiion create the the xticks labels this take place intead
@@ -66,8 +68,8 @@ def labelsFunc(point, mode):
     and level of redundancy example: [(2,1), (2,2),... ]
 
     """
-    n = point["n_position"]
-    siz = point["batchQntClouds"]
+    n = point.n_inferred
+    siz = point.elements_length
 
     labels = []
     if mode == "n":
@@ -88,7 +90,7 @@ def labelsFunc(point, mode):
                 labels.append((z.item(), c.item()))
 
     elif mode == "k":
-        k = point["k_position"]
+        k = point.k_inferred
         labels = [(k.item(), i) for i in range(k, siz + 1)]
 
     else:
@@ -105,9 +107,9 @@ def plotting(
     logScale=False,
     labeloptions: tuple = (False, "upper right"),
     annotatewo=True,
-    point=None,
+    point:Point=None,
 ) -> None:
-    
+
     # points2graph tuple (value, name2display)
     # data_and_name
 
@@ -116,17 +118,14 @@ def plotting(
 
     # Validation
     log = logging.getLogger(__name__)
-    log.info("Graph path: %s \n\tand inforamation\n\n", path)
 
     # Raise error
     if not (mode is None or type(mode) is str):
         raise TypeError("Mode is getting a invalid type")
 
     # Validate that all data have the same length
-    log.info("Values to graph:")
     to_compare = data_and_names[0][0].shape[0]  # first data element
     for i, (data, name) in enumerate(data_and_names):
-        log.info(" \tData %s:  %s\n", str(name), str(data))
         if data.shape[0] != to_compare:
             print(sys.exc_info()[0])
             raise ValueError("Tensor doesn't have the same dimention")
@@ -175,9 +174,9 @@ def plotting(
                 )
 
     # necesary data for calculate position and xticks
-    n = point["n_position"].float()
-    k = point["k_position"].float()
-    siz = point["batchQntClouds"]
+    n = point.n_inferred.float()
+    k = point.k_inferred.float()
+    siz = point.elements_length
 
     if mode == "k_n":
         position = (((n - 2) * (n - 1)) / 2) + k - 2
@@ -193,10 +192,6 @@ def plotting(
 
     annotations = True
     if pointsToGraph is not None and annotations:
-        for (val, name) in pointsToGraph:
-            log.info("\t name %s,  valor: %s", str(name), str(val))
-
-        # plotting
         for (val, name) in pointsToGraph:
             txt = "Model"
             plt.annotate(txt, xy=(position, val), arrowprops=dict(facecolor="black"))

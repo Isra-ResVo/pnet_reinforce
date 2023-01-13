@@ -132,7 +132,7 @@ def extend_information(
                 plotting(
                     data_and_names=data_and_name_2graph,
                     pointsToGraph=points2graph,
-                    point=point,
+                    point=point_object,
                     mode=config.mode,
                     path=pathLocal,
                     logScale=True,
@@ -172,7 +172,7 @@ def extend_information(
                 plotting(
                     data_and_name,
                     points2graph,
-                    point=point,
+                    point=point_object,
                     mode=config.mode,
                     path=pathLocal,
                     labeloptions=labeloptions,
@@ -221,7 +221,7 @@ def extend_information(
             plotting(
                 tuples_data_and_names,
                 points2graph,
-                point=point,
+                point=point_object,
                 mode=config.mode,
                 path=pathComparation,
                 annotatewo=annotatewo,
@@ -244,8 +244,8 @@ def extend_information(
             )
 
         print2word = False
-        text["n"] = reward_grouped.n_inferred[index].item()
-        text["k"] = reward_grouped.k_inferred[index].item()
+        text["n"] = point_object.n_inferred.item()
+        text["k"] = point_object.k_inferred.item()
         text["redundancy"] = reward_grouped.redundancy[index]
         text["prn_ln"] = point_object.probability_of_error_normalized
         text["rn"] = reward_grouped.normalized_redundancy[index]
