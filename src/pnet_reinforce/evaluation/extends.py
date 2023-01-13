@@ -58,8 +58,8 @@ def extend_information(
             text["pr_error"] = point_object.probability_of_error_no_log
             text["pr_ln"] = point_object.probability_of_error  # antes point['prLog']
             text["prErrorminimum"] = point_object.minimum_value_in_batch_element
-            text["prErrormaximum"] = point_object.maximum_value_in_atch_element
-            text["prMinAbs"] = torch.exp(point_object.minimum_value_inb_batch_element)
+            text["prErrormaximum"] = point_object.maximum_value_in_batch_element
+            text["prMinAbs"] = torch.exp(point_object.minimum_value_in_batch_element)
             text["degPr"] = point_object.degradation_wrt_minimum
 
             if plot:
@@ -101,23 +101,21 @@ def extend_information(
                 )
 
         if "redundancy" in config.whatToGraph:
+
+            localNames = ["Redundancia"]
             helper_data_redundancy = HelperPlottingPoints(
                 reward_config=reward_grouped.reward_config
             )
-            localNames = ["Redundancia"]
-            (
-                redundancy,
-                redundancy_original,
-                degR,
-                minimum,
-                maximum,
-            ) = helper_data_redundancy.redundancyValsPlot(
+            helper_data_redundancy.redundancyValsPlot(
                 point=point_object, config=config, data_object=data_object, index=index
             )
-            text["redundancymax"] = maximum
-            text["redundancymin"] = minimum
+
+            redundancy = point_object.redundancy_all_values_of_element_batch_normalized
+
+            text["redundancymax"] = point_object.redundancy_maximum
+            text["redundancymin"] = point_object.redundancy_minimum
             text["redundancy"] = point_object.redundancy
-            text["degR"] = degR
+            text["degR"] = point_object.redundancy_degradation_wrt_minimum
 
             if plot:
                 if config.mode == "n":
@@ -127,7 +125,10 @@ def extend_information(
 
                 pathLocal = path + " Redundancia.png"
                 points2graph = [(point_object.redundancy, "redundancy")]
-                data_and_name = [(redundancy_original, localNames)]
+                data_and_name = [
+                    (point_object.redundancy_all_values_of_element_batch, localNames)
+                ]
+
                 plotting(
                     data_and_name,
                     points2graph,
@@ -137,14 +138,21 @@ def extend_information(
                     labeloptions=labeloptions,
                 )
 
-                tuples_data_and_names.append((redundancy, "Redundancia"))
+                tuples_data_and_names.append(
+                    (
+                        point_object.redundancy_all_values_of_element_batch_normalized,
+                        "Redundancia",
+                    )
+                )
 
         if point_object.all_element_batch_error_probabilities_normalized.is_cuda:
-            redundancy = redundancy.cuda()
+            point_object.redundancy_all_values_of_element_batch_normalized = (
+                point_object.redundancy_all_values_of_element_batch_normalized.cuda()
+            )
 
         woValues2Graph = (
             point_object.all_element_batch_error_probabilities_normalized * config.wo[0]
-            + redundancy * config.wo[1]
+            + point_object.redundancy_all_values_of_element_batch_normalized * config.wo[1]
         )
         # print('valores de woValues2Graph', elementToCompare)
 
@@ -239,7 +247,7 @@ def extend_information(
             val_statistic["wo"].append(text["wo"])
             val_statistic["pr_ln"].append(point_object.probability_of_error)
             val_statistic["redundancy"].append(
-                reward_grouped.normalized_pr_error[index]
+                reward_grouped.normalized_redundancy[index]
             )
             val_statistic["won"].append(text["won"])
             val_statistic["prn_ln"].append(point_object.probability_of_error_normalized)
