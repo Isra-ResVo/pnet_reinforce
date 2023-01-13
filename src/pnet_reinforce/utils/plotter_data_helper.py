@@ -1,11 +1,12 @@
 import torch
 from reward.error_func import pr_error_bound
 from generator.data_interface.data import DataRepresentation
+from evaluation.data_point import Point
 
 selected_error_formula = pr_error_bound
 
 
-def pr_vals_2_plot(toCompareInPlot, data_object: DataRepresentation, point, config, device, idxEle=0):
+def pr_vals_2_plot(toCompareInPlot, data_object: DataRepresentation, point:Point, config, device, idxEle=0):
     # agregar config
     # All this only works for one element!
     local_error_formula = selected_error_formula

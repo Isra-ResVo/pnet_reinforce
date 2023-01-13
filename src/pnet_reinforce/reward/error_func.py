@@ -16,8 +16,9 @@ def error_function(
             [0,3,4,5],
             [0,3,4,5]]
 
-    Note: very inefficient way to calculate this is better to take the values and make a bound
-    because the complexity is too high for this porpouse
+    Note: Very inefficient way to calculate this is better to take the values and make a bound
+    because the complexity is too high for this.
+    To maintrain consistency the probabilities are returned in log.
     """
 
     pr_error = []
@@ -60,14 +61,15 @@ def pr_error_bound(
 
     r"""
     This function calculate the probability of failure by taking the combinations of
-    elected clouds quantity by the model.
+    selected clouds quantity by the model.
 
     This bound greater (>) than original formula, and is almost O(n) in complexity,
     converserly the original it is almost O(n^k).
 
     The main idea is only to use binomial coefficient to get all the possible combinations and
     multiply it by the worst cloud stats among the all them.
-
+    This formula is using log
+    **Note**
     """
 
     def factorial2(tensor):

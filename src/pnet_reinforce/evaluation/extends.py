@@ -6,6 +6,8 @@ from reward.helpers import HelperPlottingPoints
 from reward.reward_representation import DataSolution
 from generator.data_interface.data import DataRepresentation
 
+from evaluation.data_point import Point, PointReferences
+
 
 def extend_information(
     data_object: DataRepresentation,
@@ -29,19 +31,49 @@ def extend_information(
     for index, _ in enumerate(batch):
 
         # Dict with values of first element of inference and print it in plot to see model performance
+        # point = {
+        #     "value_error": reward_grouped.probability_of_error[index],
+        #     "prError1": 0,
+        #     "redundancy": reward_grouped.redundancy[index],
+        #     "normRed": reward_grouped.normalized_redundancy[index],
+        #     # values to compare
+        #     "n_position": reward_grouped.n_inferred[index],
+        #     "k_position": reward_grouped.k_inferred[index],
+        #     "onlyClouds": reward_grouped.selected_clouds[index],
+        #     "batchQntClouds": data_object.elements_length[index],
+        # }
+        point_object = Point(
+            reward_grouped=reward_grouped, data_object=data_object, index=index
+        )
+
+        # add more data to the point.
+        PointReferences(point=point_object).pr_vals_2_plot(
+            data_object=data_object, config=config, idxEle=index
+        )
+        # Elements to populate for plotting reasons
+
         point = {
-            "value_error": reward_grouped.probability_of_error[index],
+            "value_error": point_object.probability_of_error,
             "prError1": 0,
-            "redundancy": reward_grouped.redundancy[index],
-            "normRed": reward_grouped.normalized_redundancy[index],
+            "redundancy": point_object.redundancy,
+            "normRed": point_object.normalized_redundancy,
             # values to compare
-            "n_position": reward_grouped.n_inferred[index],
-            "k_position": reward_grouped.k_inferred[index],
-            "onlyClouds": reward_grouped.selected_clouds[index],
-            "batchQntClouds": data_object.elements_length[index],
+            "n_position": point_object.n_inferred,
+            "k_position": point_object.k_inferred,
+            "onlyClouds": point_object.selected_clouds,
+            "batchQntClouds": point_object.elements_length,
         }
 
-        # Elements to populate for plotting reasons
+        tuple_pr_error_2graph = (
+            point_object.all_element_batch_error_probabilities,
+            point_object.all_element_batch_error_probabilities_no_log,
+        )
+        pr_normalized_plot = (
+            point_object.all_element_batch_error_probabilities_normalized
+        )
+        degPr = point_object.degradation_wrt_minimum
+        minimum = point_object.minimum_value_in_batch_element
+        maximum = point_object.maximum_value_in_batch_element
 
         toCompareInPlot = []
         tuples_data_and_names = []
@@ -55,26 +87,26 @@ def extend_information(
             localNameToShow = ["prError"]  # revisar
 
             # inside of pr_val_2_plot various values of point dict are generated
-            (
-                tuple_pr_error_2graph,
-                pr_normalized_plot,
-                degPr,
-                minimum,
-                maximum,
-            ) = pr_vals_2_plot(
-                toCompareInPlot=toCompareInPlot,
-                data_object=data_object,
-                point=point,
-                config=config,
-                device=device,
-                idxEle=index,
-            )
-            text["pr_error"] = point["pr_error"]  # antes point['prAbs']
-            text["pr_ln"] = point["pr_ln"]  # antes point['prLog']
-            text["prErrorminimum"] = minimum
-            text["prErrormaximum"] = maximum
-            text["prMinAbs"] = torch.exp(minimum)
-            text["degPr"] = degPr
+            # (
+            #     tuple_pr_error_2graph,
+            #     pr_normalized_plot,
+            #     degPr,
+            #     minimum,
+            #     maximum,
+            # ) = pr_vals_2_plot(
+            #     toCompareInPlot=toCompareInPlot,
+            #     data_object=data_object,
+            #     point=point,
+            #     config=config,
+            #     device=device,
+            #     idxEle=index,
+            # )
+            text["pr_error"] = point_object.probability_of_error_no_log
+            text["pr_ln"] = point_object.probability_of_error  # antes point['prLog']
+            text["prErrorminimum"] = point_object.minimum_value_in_batch_element
+            text["prErrormaximum"] = point_object.maximum_value_in_batch_element
+            text["prMinAbs"] = torch.exp(point_object.minimum_value_in_batch_element)
+            text["degPr"] = point_object.degradation_wrt_minimum
 
             if plot:
                 if config.mode == "n":
@@ -85,11 +117,11 @@ def extend_information(
                 pathLocal = path + " Probabilidad de perdida.png"
 
                 if config.log:
-                    points2graph = [(point["pr_ln"], "pr_ln")]
+                    points2graph = [(point_object.probability_of_error, "pr_ln")]
                     pr_error_2graph = tuple_pr_error_2graph[0]  # ln values
 
                 else:
-                    points2graph = [(point["pr_error"], "pr")]
+                    points2graph = [(point_object.probability_of_error_no_log, "pr")]
                     pr_error_2graph = tuple_pr_error_2graph[1]
 
                 data_and_name_2graph = [
@@ -98,8 +130,8 @@ def extend_information(
                 print("*" * 100)
                 print(pr_error_2graph)
                 plotting(
-                    data_and_name_2graph,
-                    points2graph,
+                    data_and_names=data_and_name_2graph,
+                    pointsToGraph=points2graph,
                     point=point,
                     mode=config.mode,
                     path=pathLocal,
@@ -154,7 +186,10 @@ def extend_information(
         woValues2Graph = pr_normalized_plot * config.wo[0] + redundancy * config.wo[1]
         # print('valores de woValues2Graph', elementToCompare)
 
-        wo = point["prn_ln"] * config.wo[0] + point["normRed"] * config.wo[1]
+        wo = (
+            point_object.probability_of_error_normalized * config.wo[0]
+            + point["normRed"] * config.wo[1]
+        )
 
         epsilon = 1e-35
         text["wo"] = wo
@@ -212,9 +247,9 @@ def extend_information(
         text["n"] = reward_grouped.n_inferred[index].item()
         text["k"] = reward_grouped.k_inferred[index].item()
         text["redundancy"] = reward_grouped.redundancy[index]
-        text["prn_ln"] = point["prn_ln"]
+        text["prn_ln"] = point_object.probability_of_error_normalized
         text["rn"] = reward_grouped.normalized_redundancy[index]
-        text["prAbs"] = point["pr_error"]
+        text["prAbs"] = point_object.probability_of_error_no_log
         text["deg_pr_ln"] = text["prErrorminimum"] / text["pr_ln"]
         if print2word:
             # Para escribir todo en latex
