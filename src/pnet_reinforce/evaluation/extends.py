@@ -156,18 +156,17 @@ def extend_information(
         )
         # print('valores de woValues2Graph', elementToCompare)
 
-        wo = (
+        point_object.wo = (
             point_object.probability_of_error_normalized * config.wo[0]
             + point_object.normalized_redundancy * config.wo[1]
         )
 
         epsilon = 1e-35
-        text["wo"] = wo
+        text["wo"] = point_object.weighted_objective
         text["womin"] = torch.min(woValues2Graph)
         text["womax"] = torch.max(woValues2Graph)
-        text["won"] = (wo - text["womin"]) / (text["womax"] - text["womin"] + epsilon)
+        text["won"] = (point_object.weighted_objective - text["womin"]) / (text["womax"] - text["womin"] + epsilon)
 
-        point_object.weighted_objective = wo
 
         if plot:
             tuples_data_and_names.append((woValues2Graph, "WO"))
