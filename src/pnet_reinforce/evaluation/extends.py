@@ -6,7 +6,8 @@ from reward.helpers import HelperPlottingPoints
 from reward.reward_representation import DataSolution
 from generator.data_interface.data import DataRepresentation
 
-from evaluation.data_point import Point, PointReferences
+from evaluation.data_point import Point, ProbalityErrorReferences, WeightedObjectiveReferences
+
 
 
 def extend_information(
@@ -46,7 +47,7 @@ def extend_information(
             localNameToShow = ["prError"]  # revisar
 
             # add more data to the point.
-            PointReferences(point=point_object).pr_vals_2_plot(
+            ProbalityErrorReferences(point_object=point_object).pr_vals_2_plot(
                 data_object=data_object, config=config, idxEle=index
             )
 
@@ -144,28 +145,13 @@ def extend_information(
                         "Redundancia",
                     )
                 )
+        
+        WeightedObjectiveReferences(point_object=point_object, config=config).add()
+        
 
-        if point_object.all_element_batch_error_probabilities_normalized.is_cuda:
-            point_object.redundancy_all_values_of_element_batch_normalized = (
-                point_object.redundancy_all_values_of_element_batch_normalized.cuda()
-            )
 
-        woValues2Graph = (
-            point_object.all_element_batch_error_probabilities_normalized * config.wo[0]
-            + point_object.redundancy_all_values_of_element_batch_normalized * config.wo[1]
-        )
-        # print('valores de woValues2Graph', elementToCompare)
-
-        point_object.wo = (
-            point_object.probability_of_error_normalized * config.wo[0]
-            + point_object.normalized_redundancy * config.wo[1]
-        )
-
-        epsilon = 1e-35
-        text["wo"] = point_object.weighted_objective
-        text["womin"] = torch.min(woValues2Graph)
-        text["womax"] = torch.max(woValues2Graph)
-        text["won"] = (point_object.weighted_objective - text["womin"]) / (text["womax"] - text["womin"] + epsilon)
+        woValues2Graph = point_object.all_element_batch_ponderate_objective
+        text["won"] = point_object.all_element_batch_ponderate_objective_normalized
 
 
         if plot:
@@ -243,14 +229,14 @@ def extend_information(
             print(fprint)
 
         if config.statistic:
-            val_statistic["wo"].append(text["wo"])
+            val_statistic["wo"].append(point_object.weighted_objective)
             val_statistic["pr_ln"].append(point_object.probability_of_error)
             val_statistic["redundancy"].append(
                 reward_grouped.normalized_redundancy[index]
             )
             val_statistic["won"].append(text["won"])
             val_statistic["prn_ln"].append(point_object.probability_of_error_normalized)
-            val_statistic["rn"].append(text["rn"])
+            val_statistic["rn"].append(reward_grouped.normalized_redundancy[index])
 
     if config.statistic:
         print("valores adquiridos para la tupla")
