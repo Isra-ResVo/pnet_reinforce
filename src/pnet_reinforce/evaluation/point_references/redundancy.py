@@ -4,11 +4,11 @@ from generator.data_interface.data import DataRepresentation
 from evaluation.data_point import Point
 
 
-class HelperPlottingPoints(BaseReward):
+class RedundancyReferences(BaseReward):
     def __init__(self, reward_config: RewardConfig):
-        super(HelperPlottingPoints, self).__init__(reward_config)
+        super(RedundancyReferences, self).__init__(reward_config)
 
-    def redundancyValsPlot(
+    def add(
         self, point: Point, config, data_object: DataRepresentation, index
     ):
         # This funtion is for creating the values for plotting
@@ -86,12 +86,3 @@ class HelperPlottingPoints(BaseReward):
         point.redundancy_degradation_wrt_minimum = redundancy_degradation_wrt_minimum
         point.redundancy_maximum = redundancy_minimum
         point.redundancy_minimum = redundancy_maximum
-        
-
-        return (
-            redundancy_all_values_of_element_batch_normalized,
-            redundancy_all_values_of_element_batch,
-            redundancy_degradation_wrt_minimum,
-            redundancy_minimum,
-            redundancy_maximum,
-        )

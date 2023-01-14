@@ -37,15 +37,6 @@ def model_evaluation(
         )
         data_object = data_generator.item_batch_evalution()
 
-    # data = {
-    #     "len_elements": data_object.elements_length,
-    #     "batch": data_object.batch,
-    #     "indices": data_object.indices,
-    #     "batchNormal": data_object.batch_normalized,
-    #     "restricted_n": data_object.restricted_n,
-    #     "restricted_k": data_object.restricted_k,
-    # }
-
     pointer_net.eval()
     critic_net.eval()
 
