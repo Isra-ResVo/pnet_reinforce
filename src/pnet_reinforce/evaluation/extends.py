@@ -1,12 +1,13 @@
-import torch
-import numpy as np
+
 from utils.plotter_data_helper import pr_vals_2_plot
 from extras import plotting
 from reward.helpers import HelperPlottingPoints
 from reward.reward_representation import DataSolution
 from generator.data_interface.data import DataRepresentation
+from evaluation.statisctics import Statistics
 
 from evaluation.data_point import Point, ProbalityErrorReferences, WeightedObjectiveReferences
+
 
 
 
@@ -18,14 +19,7 @@ def extend_information(
     plot: bool,
     printOpt: float,
 ):
-    val_statistic = {
-        "pr_ln": [],
-        "prn_ln": [],
-        "redundancy": [],
-        "rn": [],
-        "wo": [],
-        "won": [],
-    }
+    statistics = Statistics(reward_grouped=reward_grouped)
     batch = data_object.batch
 
     for index, _ in enumerate(batch):
@@ -162,41 +156,7 @@ def extend_information(
             )
 
         if config.statistic:
-            val_statistic["wo"].append(point_object.weighted_objective)
-            val_statistic["pr_ln"].append(point_object.probability_of_error)
-            val_statistic["redundancy"].append(
-                reward_grouped.normalized_redundancy[index]
-            )
-            val_statistic["won"].append(text["won"])
-            val_statistic["prn_ln"].append(point_object.probability_of_error_normalized)
-            val_statistic["rn"].append(reward_grouped.normalized_redundancy[index])
+            statistics.add_values(point_object=point_object, index=index)
 
     if config.statistic:
-        print("valores adquiridos para la tupla")
-        for i, (val_k, val_n) in enumerate(
-            zip(reward_grouped.k_inferred, reward_grouped.n_inferred)
-        ):
-            print(
-                "Experimento no.{}, valor de la tupla({},{})".format(
-                    i + 1, val_k, val_n
-                )
-            )
-        
-        for key in val_statistic:
-            val_statistic[key] = torch.stack(val_statistic[key]).numpy()
-
-            print("\nDato {}".format(key))
-            if val_statistic[key].shape[0] <= 1:
-                print(
-                    "No se puede realizar operaciones estadisticas con un solo elemento"
-                )
-            else:
-                print("Media, Varianza, Desviación estarndar")
-                print(
-                    "{:.4f}, {:.6f}, {:.4f}".format(
-                        np.mean(val_statistic[key]),
-                        np.var(val_statistic[key], ddof=1),
-                        np.std(val_statistic[key], ddof=1),
-                    )
-                )
-                print("Datos que se utilizaron para el calculo:\n", val_statistic[key])
+        statistics.print_results()
