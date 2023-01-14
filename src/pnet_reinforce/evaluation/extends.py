@@ -26,7 +26,6 @@ def extend_information(
         "wo": [],
         "won": [],
     }
-    device = config.device
     batch = data_object.batch
 
     for index, _ in enumerate(batch):
@@ -35,16 +34,12 @@ def extend_information(
             reward_grouped=reward_grouped, data_object=data_object, index=index
         )
 
-        toCompareInPlot = []
         tuples_data_and_names = []
-        names = []
         text = {}
 
         if "prError" in config.whatToGraph:
             # cambio a peticion del Dr.
-            # localNames = ['prError - Best Elements', 'prErorr - All combinations']
-            local_name = ["Probabilidad de perdida"]  # revisar
-            localNameToShow = ["prError"]  # revisar
+            local_name = ["Probabilidad de perdida"]  
 
             # add more data to the point.
             ProbalityErrorReferences(point_object=point_object).pr_vals_2_plot(
@@ -103,7 +98,7 @@ def extend_information(
             helper_data_redundancy.redundancyValsPlot(
                 point=point_object, config=config, data_object=data_object, index=index
             )
-                        
+
             if plot:
                 if config.mode == "n":
                     labeloptions = (True, "upper right")
@@ -166,26 +161,6 @@ def extend_information(
                 annotatewo=annotatewo,
             )
 
-        if printOpt:
-            print(
-                "\n\n  Resultados de la experimetacion, número de experimento {}".format(
-                    index
-                )
-            )
-
-            print("\n\nSelecton of tuple (k,n):")
-            print("\tn quantity: ", reward_grouped.n_inferred[index])
-            print("\tk quantity: ", reward_grouped.k_inferred[index])
-            print(
-                "\t --->valor de comparacion (normRed+prError)/2: {}".format(
-                    (
-                        point_object.normalized_redundancy
-                        + point_object.probability_of_error_normalized
-                    )
-                    / 2
-                )
-            )  
-
         if config.statistic:
             val_statistic["wo"].append(point_object.weighted_objective)
             val_statistic["pr_ln"].append(point_object.probability_of_error)
@@ -206,7 +181,7 @@ def extend_information(
                     i + 1, val_k, val_n
                 )
             )
-
+        
         for key in val_statistic:
             val_statistic[key] = torch.stack(val_statistic[key]).numpy()
 
