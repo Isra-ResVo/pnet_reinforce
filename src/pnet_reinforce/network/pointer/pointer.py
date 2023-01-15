@@ -5,7 +5,7 @@ from torch.distributions.categorical import Categorical
 import numpy as np
 import logging
 
-from pointer.mask import pointer_mask, mask_n, mask_k
+from network.pointer.mask import pointer_mask, mask_n, mask_k
 from generator.data_interface.data import DataRepresentation
 
 

@@ -4,8 +4,8 @@ import itertools
 import logging
 
 # ---------- local modules ------------
-from pointer.pointer import Pointer
-from actor.embedding import Embedding
+from network.pointer.pointer import Pointer
+from network.actor.embedding import Embedding
 from generator.data_interface.data import BaseDataStructure
 
 # this function was disable by ask of the dr

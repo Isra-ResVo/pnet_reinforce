@@ -5,7 +5,7 @@ from extras import extraElements
 
 # from actor.actor import Reward
 from reward.reward import Reward, RewardConfig
-from critic import Critic
+from network.critic import Critic
 
 
 def model_training(
