@@ -86,10 +86,9 @@ class Reward(BaseReward):
         return grouped_rewards
 
     def __redundancy(self):
-        r"""
-        This values are experimental values from real comfigurations. This values were retrivied from previous
-        literature
-
+        """
+        This values are experimental values from real comfigurations. 
+        This values were retrivied from previous literature
         """
 
         rewardR = []

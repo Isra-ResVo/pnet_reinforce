@@ -36,7 +36,7 @@ class Pointer(nn.Module):
         self.C = config.C
         self.temperature = config.temperature
 
-        # Vector para las confuguraciones
+        # vector for configurations
         self.linear_first_entry = torch.nn.Linear(
             in_features=2, out_features=self.hidden_dim * 2, bias=True
         )
@@ -91,7 +91,7 @@ class Pointer(nn.Module):
 
     def forward(self, encoder_output, encoder_states, data_object: DataRepresentation):
 
-        r"""
+        """
         Encoder_output: [steps, batch, hidden_dim*directions]
         Encoder_states:
             h_state:[num_layers * num_directions, batch, hidden_size]
@@ -158,6 +158,13 @@ class Pointer(nn.Module):
         return self.selections, self.log_probs  # lo demás luego lo verifico
 
     def __decode_loop(self, decoder_loop_input, decoder_loop_state, step, data_object: DataRepresentation):
+        
+        '''
+        In this method the items are selected the item previously selected is
+        used as input for select the next item and so on. This not apply for the
+        first iteration because this use a sintatic item to generate the first
+        selection
+        '''
 
         # Run the cell on a combination of the previous input and state
         output, state = self.lstm_decoder(decoder_loop_input, decoder_loop_state)
@@ -169,7 +176,7 @@ class Pointer(nn.Module):
 
         # Multinomial distribution
         #   Categocal distribution helps to explore different solutions over time
-        #   arg.max es more aggressive without exploration, this could lead in poor solutions
+        #   arg.max es more aggressive without exploration, this could lead to poor solutions
         distribution_toNext_selection = Categorical(vector_pointer)
 
         if self.config.selection == "categorical":
@@ -207,7 +214,7 @@ class Pointer(nn.Module):
         return new_decoder_input, state
 
     def __pointer_mechanism(self, ref_g, q_g, step, data_object: DataRepresentation):
-        r"""
+        """
         Wref_g,W_q \in R^d*d  and u_vector = ref \in R^d
 
         ref_dot:
@@ -305,7 +312,7 @@ class Pointer(nn.Module):
     def first_entry(
         self, batch_size, data_object: DataRepresentation, 
     ) -> torch.Tensor:  # warning cambie el valor aque era sel_nn
-        r"""
+        """
         For the first element in the batch, in TSP (travelling salesman problem)
         usually uses any city because it's  interpreted as a circular permutation,
         but in this problem is not the case, for that reason, it's used a synthetic

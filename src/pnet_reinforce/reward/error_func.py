@@ -6,8 +6,8 @@ def error_function(
     self=None, batch=None, subsets: "list" = None, only_clouds: "list" = None
 ) -> "float":
 
-    r"""
-    Here the variables subsets and only clouds are dtype list
+    """
+    Here the variables subsets and only clouds are  list dtype
     subsets: contains list for selec j items (j = n-k+1 for every batch element)
         Example:
             [2,3,4]
@@ -59,7 +59,7 @@ def pr_error_bound(
     self=None, batch=None, subsets: list = None, only_clouds: list = None
 ) -> torch.Tensor:
 
-    r"""
+    """
     This function calculate the probability of failure by taking the combinations of
     selected clouds quantity by the model.
 

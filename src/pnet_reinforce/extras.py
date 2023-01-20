@@ -10,7 +10,7 @@ from evaluation.data_point import Point
 
 def extraElements(batchShape, device, norm, oneElement=False) -> torch.Tensor:
 
-    r"""create extra elements for be concatened in the batch tensor
+    """create extra elements for be concatened in the batch tensor
     only works when batch is normlized, because it takes values for represent
     this special elements outside of [0,1] range, where is the normal elements domain
     """
@@ -33,7 +33,7 @@ def extraElements(batchShape, device, norm, oneElement=False) -> torch.Tensor:
 
 
 def normalization(batch: torch.Tensor, device: str = "cpu") -> torch.Tensor:
-    r"""
+    """
     Normalize function -> (0,1)
     using the next formula by element and caracteristic
         element - minimum
@@ -42,11 +42,6 @@ def normalization(batch: torch.Tensor, device: str = "cpu") -> torch.Tensor:
 
     this works with tensor arrange of the next way
         [batch index, caracteristic, elements]
-
-
-    Probar: el normalizado entre un rango fijo de valores donde no se tome el maximo y el minomo de cada
-    instancia para tenerlos como litmires naturales del problema
-
     """
 
     batchNorm = torch.zeros_like(batch)  # default device of input
@@ -63,7 +58,7 @@ def normalization(batch: torch.Tensor, device: str = "cpu") -> torch.Tensor:
 def labelsFunc(point: Point, mode):
     r"""
 
-    This fucntiion create the the xticks labels this take place intead
+    This funtion create the the xticks labels this take place intead
     of the values in the x-axis. This will be the combination of clouds
     and level of redundancy example: [(2,1), (2,2),... ]
 
@@ -107,7 +102,7 @@ def plotting(
     logScale=False,
     labeloptions: tuple = (False, "upper right"),
     annotatewo=True,
-    point:Point=None,
+    point: Point = None,
 ) -> None:
 
     # points2graph tuple (value, name2display)
@@ -214,7 +209,7 @@ def plotting(
         plt.legend(loc=location)
     else:
         plt.legend(bbox_to_anchor=(0, -0.26), loc="center left", borderaxespad=0.0)
-        
+
     # save fig
     plt.savefig(path)
     plt.show()

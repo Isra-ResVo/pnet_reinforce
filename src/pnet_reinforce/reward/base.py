@@ -8,9 +8,10 @@ from reward.error_func import error_function, pr_error_bound
 
 class RewardConfig(object):
 
-    r"""
+    """
     This function save all the necessesary data to process the
-    required output based in the initial state.
+    required reward used in traning based in the solutions generated
+    by the network.
     """
 
     def __init__(self, selections, device, qnt_steps, config, value_k=None):
@@ -33,20 +34,21 @@ class RewardConfig(object):
             self.selected_clouds, self.k_inferred, self.n_inferred = self.get_k_and_clouds()
 
     def get_k_and_clouds(self, value_k=None):
-        r"""
-        The model select membres of every element in the batch in a loop way. With this
-        context before this begin the `pointer_network` adds an extra element as wild card
-        and when this wild card is selected the next iterations only will select this wild
-        card that have no value in the Reward calculation.
+        """
+        The model select items of every element in the batch in a loop way. With this
+        context before this begin the `pointer_network` adds an extra element/token
+        as wild card.
+        When k token is selected the next iterations only allow to select it repeteadly and
+        the quantitie of times is selected determines the value of k.
 
-        This wild card can be replaced by another network that calculate the probability of
-        choose other element or end the secuence. Maybe can do a better work...
+        Maybe the wild card can be reemplace by another network but another problem
+        arises. How to enforce a valid solution?
 
         return:
         --------
-        `selected_clouds`: List of cloud selected by the model
+        `selected_clouds`: List of items selected by the model
         `k_inferred: array`: Value of inferred of k
-        `n_inferred: array`: Value of inferred of n
+        `n_inferred: array`: Value of inferred of n' 
         """
         selected_clouds = []
         if self.config.mode == "k":
@@ -78,7 +80,18 @@ class RewardConfig(object):
 
 
 class BaseReward(ABC):
+    """Base class to save all configuration to genrate reward
+    and related data.
+
+    Args:
+        ABC (_type_): meta class
+    """    
     def __init__(self, reward_config: RewardConfig):
+        """
+
+        Args:
+            reward_config (RewardConfig): _description_
+        """        
         self.k_inferred = reward_config.k_inferred
         self.n_inferred = reward_config.n_inferred
         self.selected_clouds = reward_config.selected_clouds
