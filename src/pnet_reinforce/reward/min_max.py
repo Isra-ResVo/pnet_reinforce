@@ -8,7 +8,7 @@ class MaxMinRedundancy(BaseReward):
 
     def max_min_redundancy(self, len_elements):
 
-        r"""
+        """
 
         To caluclate min and max values for normalization because only we
         have 11 clouds at this moment I'm working with a dict, where I can't
@@ -121,7 +121,7 @@ class MaxMinError(BaseReward):
 
     def min_max_error(self, data_object:DataRepresentation) -> torch.Tensor:
 
-        r"""
+        """
         To calculate in the case when n y k is choosen for the system
         we use all the clouds for this propurse, this seem the qnt that get the min
         with k = 2, and max with k = n.

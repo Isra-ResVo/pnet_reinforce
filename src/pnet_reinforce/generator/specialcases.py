@@ -9,7 +9,7 @@ class RandomGenerator(BaseBatchGenerator):
     def __random_number_in_range_of_len_elements(
         self, batch_size: int = None, len_elements: iter = None
     ) -> torch.Tensor:
-        r"""
+        """
         When we need to create elements to train in the special case
         where the value of n or k is fixed is necessary to make a
         special restriction to avoid generate invalid solution. These

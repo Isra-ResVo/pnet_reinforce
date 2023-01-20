@@ -239,7 +239,7 @@ misc_arg.add_argument(
 
 
 def get_config():
-    r"""
+    """
     This object contain all the configurations. The configuration
     can be passed thorugh the terminal as any program to overwrite
     the original configuration this is very useful to make scripts

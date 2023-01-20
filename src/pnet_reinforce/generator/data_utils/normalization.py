@@ -1,7 +1,7 @@
 import torch
 
 def normalization(batch: torch.Tensor, device: str = "cpu") -> torch.Tensor:
-    r"""
+    """
     Normalize function -> (0,1)
     using the next formula by element and caracteristic
         element - minimum

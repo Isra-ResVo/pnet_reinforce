@@ -7,7 +7,7 @@ from generator.generator.initial_data import (
 
 
 class BaseBatchGenerator(ABC):
-    r"""
+    """
 
     Basic block of contruction and configuration
     for api method related to data based on a pre

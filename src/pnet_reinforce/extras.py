@@ -56,7 +56,7 @@ def normalization(batch: torch.Tensor, device: str = "cpu") -> torch.Tensor:
 
 # labels for plotting
 def labelsFunc(point: Point, mode):
-    r"""
+    """
 
     This funtion create the the xticks labels this take place intead
     of the values in the x-axis. This will be the combination of clouds

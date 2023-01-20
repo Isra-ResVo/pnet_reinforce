@@ -5,7 +5,7 @@ import numpy as np
 # arguemnt this was change because is a bad practice.
 def optimisticPessimistic(selected_clouds_indices) -> np.ndarray:
 
-    r"""
+    """
     Returs a numpy array with two elements:
     -   First element: contain the best probabilities of static CSP data,
     -   Second element: conatain the worst probabilities of  static CSP data.

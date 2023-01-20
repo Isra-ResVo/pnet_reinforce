@@ -178,7 +178,7 @@ class ProbalityErrorReferences(PointReferences):
         device="cpu",
         largest=False,
     ) -> torch.tensor:
-        r"""
+        """
         All the combinations for each n and its respectives k values,
         with all the providers taken in the for one element in the batch,
         for instance:

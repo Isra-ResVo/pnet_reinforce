@@ -10,7 +10,7 @@ selected_error_formula = pr_error_bound
 
 
 class Point(object):
-    r"""
+    """
     This object is for the representation of one point of information to
     graph and make comparatin with other points of data.
 

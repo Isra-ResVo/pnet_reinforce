@@ -42,7 +42,7 @@ class ListElements(BaseBatchGenerator):
         batch_size: int = None,
         max_length: int = None,
     ):
-        r"""
+        """
         This funtion is the main function to generate a batch data on the fly
         has two variants which are trigger with @variable var.
 

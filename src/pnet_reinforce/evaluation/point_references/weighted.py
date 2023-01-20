@@ -12,7 +12,7 @@ class WeightedObjectiveReferences(PointReferences):
         self.config = config
 
     def add(self):
-        r"""
+        """
         Adds the next values to the Point object but previously this object has to:
 
         self.point_object.wo

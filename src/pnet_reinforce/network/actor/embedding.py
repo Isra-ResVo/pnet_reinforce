@@ -37,7 +37,7 @@ class Embedding(nn.Module):
 
     def forward(self, x):
 
-        r"""
+        """
         x has dimention  [batch,features,len_steps] ( convulution 1D has dimention [batch,channels,len_data])
         this arrenge is changed for access to LSTM [steps_len,batch, hidden_size] with method permute.
         """
@@ -46,7 +46,7 @@ class Embedding(nn.Module):
         embedded_input = embedded_input.permute(2, 0, 1)
         encoder_output, encoder_states = self.lstm(embedded_input)
 
-        r"""
+        """
         the exit output is something has the for out_hiddenn and states
 
         out_hidden has the shape [steps,batch,features]

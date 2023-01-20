@@ -32,7 +32,7 @@ class DataToDevice(BaseBatchGenerator):
 
 
 class Evalution_batches(BaseBatchGenerator):
-    r"""
+    """
     This function constains method to retrieve data from memory to
     make evalutions and compare results. If the values doesn't exit
     in memory they are created with the help of generator class.
@@ -52,7 +52,7 @@ class Evalution_batches(BaseBatchGenerator):
     def item_batch_evalution(
         self, alternative_batchsize: int = None
     ) -> DataRepresentation:
-        r"""
+        """
         This function only manages the logic in how to provide the data
         based in the configuration. This configuration is based on the
         shape of elements (multi elements or single element), if use
@@ -116,7 +116,7 @@ class Evalution_batches(BaseBatchGenerator):
         return tuplebatchindices
 
     def __create_new(self, path, batch_size=1):
-        r"""
+        """
 
         Take the first element from the batch and indexs
 
@@ -131,7 +131,7 @@ class Evalution_batches(BaseBatchGenerator):
         self, create: bool, path: str, batch_size=1
     ) -> tuple[np.ndarray, np.ndarray]:
 
-        r"""
+        """
         This method is a helper to manege the load or creation of
         new batches to evalution. If the `creation` is `False` then
         the helper will try to load the batch saved in memory and if this

@@ -13,7 +13,7 @@ class BaseDataStructure(ABC):
 
 
 class DataRepresentation(BaseDataStructure):
-    r"""
+    """
     This object is to have all the data and variations
     that are necessary to some subproblems like k and n
     with fixed values.
