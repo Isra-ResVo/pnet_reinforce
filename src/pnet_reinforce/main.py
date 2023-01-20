@@ -1,8 +1,9 @@
+import logging
+
 import torch
 from torch import nn
 from torch.optim import Adam
 from tqdm import tqdm
-import logging
 
 # ---- Local modules-------------------------
 from config import get_config, print_config

@@ -214,7 +214,7 @@ def plotting(
         plt.legend(loc=location)
     else:
         plt.legend(bbox_to_anchor=(0, -0.26), loc="center left", borderaxespad=0.0)
-
+        
     # save fig
     plt.savefig(path)
     plt.show()
